@@ -44,8 +44,7 @@ A definição de dado sensível como posta na legislação (por meio de exemplif
 
 \subsection{Pilares da LGPD: Consentimento e Transparência}
 \label{subsec:fund-consentimento}
-% Explique a importância do consentimento como base legal e o princípio da transparência
-% para o tratamento de dados pessoais.
+
 O Art. 7º da LGPD é dedicado às hipóteses que autorizam o tratamento de dados pessoais. Entre essas, o inciso I destaca tutela especial para o consentimento do titular dos dados - mesmo que esta não seja a única base legal para o uso de dados. O consentimento, conforme definido no Art. 5º, inciso IX, deve ser fornecido de forma livre, informada e inequívoca, garantindo que o titular compreenda plenamente as implicações do tratamento de seus dados. Isso inclui a finalidade específica para a qual os dados serão utilizados, o período de armazenamento e os direitos do titular em relação aos seus dados. Dessa forma, entende-se que o consentimento é restritivo, de modo que o agente não pode estender a autorização concedida para outras finalidades não previstas inicialmente, e que o titular pode revogar o consentimento a qualquer momento, conforme previsto no Art. 8º da LGPD.
 
 Para \citeonline{TefferViola2020}, \textit{Livre} significa que o titular pode escolher a utilização de seus dados sem intervenções ou pressões externas que viciem o consentimento por meio de assimetria entre as partes. \textit{Informado} implica que o titular deve ter a sua disposição informações suficientes e acessíveis para avaliar a forma como seus dados serão tratados e os riscos e implicações do processo, levando em conta a assimetria técnica e informacional entre as partes. Já \textit{inequívoco} sugere que o consentimento deve ser expresso de maneira clara, sem ambiguidades, seja por meio de uma ação afirmativa ou declaração explícita, de modo que o ônus da prova de que o consentimento foi obtido de forma adequada recai sobre o agente de tratamento.
@@ -59,16 +58,21 @@ Como complemento ao consentimento, a LGPD estabelece o princípio da transparên
 
 \subsection{O Tratamento de Dados para Fins de Pesquisa na LGPD}
 \label{subsec:fund-pesquisa-lgpd}
-% Analise as exceções e condições previstas na LGPD (principalmente Art. 11º) que permitem
-% o uso de dados para pesquisa, destacando o papel central da anonimização.
+
+Como destacado na seção anterior, o tratamento de dados pessoais, como os dados clínicos, é fortemente regulado pela LGPD, exigindo o consentimento explícito do titular. No entanto, a lei também reconhece a importância do avanço científico e tecnológico para a sociedade, estabelecendo exceções específicas para o uso de dados pessoais sem consentimento em determinados contextos de pesquisa. Em seu Art. 7º, inciso IV, a lei estabelece uma base legal específica que autoriza o tratamento de dados pessoais "para a realização de estudos por órgão de pesquisa", dispensando a necessidade de outras bases legais como o consentimento \cite{Brasil2018lgpd}. Conforme o Art. 5º, XVIII, a definição de "órgão de pesquisa" é ampla, incluindo entidades da administração pública e organizações privadas sem fins lucrativos que tenham como missão institucional a pesquisa básica ou aplicada.
+
+A LGPD é ainda mais específica ao tratar do uso de dados sensíveis no contexto da pesquisa científica. O Art. 11, inciso II, prevê que o tratamento de dados sensíveis pode ocorrer sem o consentimento do titular "para a realização de estudos por órgão de pesquisa, garantida, sempre que possível, a anonimização dos dados pessoais sensíveis" \cite{Brasil2018lgpd}. Essa disposição reconhece que a pesquisa científica muitas vezes depende do acesso a dados sensíveis para gerar conhecimento que pode beneficiar a sociedade como um todo. Ainda assim, a lei estabelece uma diretriz clara que preza pela desvinculação completa entre os dados e os indivíduos, buscando minimizar os riscos de violação de privacidade.
+
+A anonimização dos dados, como especificada na LGPD, é a principal ferramenta para equilibrar a proteção da privacidade dos titulares dos dados com a necessidade de acesso a informações sensíveis para fins de pesquisa e desenvolvimento científico. Essa salvaguarda impões também um desafio técnico significativo para as instituições de pesquisa, que devem ser mais cautelares na forma como coletam, armazenam e processam dados sensíveis a fim de garantir uma anonimização que reduza o risco de reidentificação dos indivíduos ao mesmo tempo em que preserva a utilidade dos dados para análise científica.
 
 \subsection{Anonimização vs. Pseudonimização sob a Ótica da Lei}
 \label{subsec:fund-anon-pseudo}
 % Apresente a definição técnica e jurídica de cada termo, deixando claro por que a
 % anonimização efetiva é o objetivo para dispensar o consentimento.
 
-mencionar aqui a parte do LGPD: c)  realização  de  estudos  por  órgão  de  pesquisa, garantida,  sempre  que  possível,  a  anonimização  dos  dados  pessoais  sensíveis;
-% ---
+Tratando-se de um instrumento essencial para a proteção da privacidade, a anonimização é um conceito que ganha atenção especial na LGPD. Conforme o Art. 5º, inciso XI, é definida como a "utilização de meios técnicos razoáveis e disponíveis no momento do tratamento, por meio dos quais um dado perde a possibilidade de associação, direta ou indireta, a um indivíduo". Ainda, a lei também faz a distinção com a pseudonimização, definida como um tratamento de segurança que, por meio da separação de informações, faz com que um dado perca a possibilidade de associação direta a um indivíduo, exceto pelo uso de informação adicional mantida separadamente pelo controlador \cite[Art. 13, § 4º]{Brasil2018lgpd}. Nesse sentido, determina-se que apesar de ambas as técnicas visarem a proteção da privacidade, a anonimização é um processo mais robusto, pois remove permanentemente a possibilidade de reidentificação, enquanto a pseudonimização apenas dificulta essa associação, mas não a elimina completamente.
+
+Como consequência dessa distinção, entende-se que o dado pseudoanonimizado é identificável, e portanto continua sendo considerado um dado pessoal sob a LGPD cujo tratamento requer uma base legal, como o consentimento do titular. Já o dado anonimizado, por perder a possibilidade de associação a um indivíduo, deixa de ser considerado um dado pessoal e, portanto, pode ser tratado sem a necessidade de consentimento, desde que a anonimização seja efetiva e irreversível. Isso significa que, uma vez anonimizado, o conjunto de dados pode ser utilizado para pesquisa e outras finalidades sem as restrições impostas pela LGPD. Para o escopo deste trabalho, o foco será na anonimização, buscando um método de tratamento de dados que dissocie de forma irreversível os dados clínicos de seus titulares.
 
 % ---
 \section{O Valor dos Dados Clínicos para Pesquisa e Inovação}
