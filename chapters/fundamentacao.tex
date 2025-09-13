@@ -74,6 +74,8 @@ Tratando-se de um instrumento essencial para a proteção da privacidade, a anon
 
 Como consequência dessa distinção, entende-se que o dado pseudoanonimizado é identificável, e portanto continua sendo considerado um dado pessoal sob a LGPD cujo tratamento requer uma base legal, como o consentimento do titular. Já o dado anonimizado, por perder a possibilidade de associação a um indivíduo, deixa de ser considerado um dado pessoal e, portanto, pode ser tratado sem a necessidade de consentimento, desde que a anonimização seja efetiva e irreversível. Isso significa que, uma vez anonimizado, o conjunto de dados pode ser utilizado para pesquisa e outras finalidades sem as restrições impostas pela LGPD. Para o escopo deste trabalho, o foco será na anonimização, buscando um método de tratamento de dados que dissocie de forma irreversível os dados clínicos de seus titulares.
 
+Do ponto de vista técnico, essa distinção pode ser formalizada. A anonimização pode ser entendida como uma função A que transforma um dado bruto X em um dado anonimizado X’, tal que não exista uma função de reidentificação R capaz de reverter o processo. Se essa função de reversão R existe, o processo é, na verdade, uma pseudonimização. Contudo, na prática, alcançar o que se pode chamar de "anonimização verdadeira" é um desafio complexo. A principal dificuldade reside no balanço inerente entre o nível de anonimato e a usabilidade dos dados: via de regra, à medida que o nível de anonimato aumenta, a utilidade dos dados para análise tende a diminuir. Com isso, a fronteira entre anonimização e pseudonimização deixa de ser uma linha clara e passa a ser uma questão de risco residual de reidentificação, que varia conforme a técnica utilizada e o contexto \cite{Zuo2021Data}.
+
 \section{O Valor dos Dados Clínicos para Pesquisa e Inovação}
 \label{sec:fund-valor-dados}
 
@@ -89,40 +91,84 @@ Essa superioridade computacional se traduz em avanços práticos diretos. Na lut
 
 Contudo, a concretização desse potencial esbarra em desafios técnicos e éticos significativos, apontados de forma unânime pela literatura. A baixa qualidade, a falta de padronização e a heterogeneidade dos dados nos EHRs são barreiras técnicas que dificultam a generalização dos modelos \cite{Liu2025, Pennisi2025}. Além disso, a privacidade e a segurança dos dados são premissas fundamentais. A literatura destaca a gestão da privacidade como uma das questões mais críticas, dado o risco de discriminação a partir da exposição de informações sensíveis sobre estilo de vida, condições de saúde e predisposições genéticas \cite{Belle2015, NationalResearchCouncil2011, Pennisi2025}. Portanto, o desenvolvimento de técnicas que permitam o uso desses dados para pesquisa, garantindo a proteção contra a reidentificação e o respeito aos direitos dos titulares, é a condição indispensável para que a promessa do Big Data na saúde se realize de forma ética e segura.
 
-\subsection{Dados Estruturados vs. Dados Não Estruturados}
-\label{subsec:fund-dados-estruturados}
-% Defina e exemplifique os dois tipos de dados no contexto clínico (ex: exames laboratoriais vs. notas de evolução).
-% Discuta os desafios e as oportunidades de cada um para a anonimização e análise.
-% ---
+\subsection{Estrutura e Atributos dos Dados Clínicos para Anonimização}
+\label{subsec:fund-dados-categorizacao}
 
-% ---
+Para aplicar técnicas de anonimização de forma eficaz, é importante compreender tanto a estrutura dos dados clínicos quanto a natureza de seus atributos. A literatura sobre privacidade de dados frequentemente parte do modelo relacional (ou tabular), no qual as informações são organizadas em tabelas com linhas representando registros (ex: uma consulta médica) e colunas representando atributos (ex: diagnóstico, data) \cite{Olatunji2024}. Esse formato é a base dos prontuários eletrônicos (PEPs) e de muitos registros de doenças, sendo o ponto de partida para a maioria dos modelos de anonimização \cite{Zuo2021Data}.
+
+Contudo, os dados de saúde frequentemente ultrapassam o modelo relacional estático, apresentando estruturas mais complexas que desafiam a anonimização. Isso inclui dados transacionais e sequenciais, cuja natureza incremental exige técnicas dinâmicas de proteção \cite{Zuo2021Data, Olatunji2024}. A complexidade atinge seu ápice nos dados em grafo, que modelam as relações entre entidades (pacientes, médicos). Nesses casos, o risco à privacidade não reside apenas nos atributos dos indivíduos, mas nas próprias conexões, que podem ser exploradas para reidentificar um titular através dos chamados "ataques de vizinhança" \cite{Olatunji2024}.
+
+Independentemente da estrutura do dado, seus atributos devem ser categorizados para a correta aplicação das técnicas de anonimização. A literatura consolida uma classificação de três tipos principais de atributos de risco. Primeiro, os Identificadores Diretos (ID), que explicitamente identificam um indivíduo, como o número do CPF ou uma combinação de nome e endereço. Em segundo lugar, os Quasi-Identificadores (QI), que são atributos que, isoladamente, não identificam ninguém, mas quando combinados podem levar à reidentificação com alta probabilidade, como gênero, data de nascimento e código postal \cite{Zuo2021Data, Olatunji2024}.
+
+Por fim, existem os Atributos Sensíveis (AS), que contêm as informações que se deseja proteger (ex: diagnóstico, dosagem de um medicamento), mas que não são diretamente úteis para a reidentificação \cite{Zuo2021Data}. É crucial notar que os Quasi-Identificadores frequentemente são também os atributos de maior valor para a análise científica, criando o dilema central da anonimização: como modificar ou suprimir os QIs para proteger a privacidade sem destruir a utilidade dos dados \cite{Zuo2021Data}. Compreender essa dupla categorização — tanto a estrutura do dado (relacional, grafo, etc.) quanto o tipo de atributo (ID, QI, AS) — é, portanto, o passo essencial que antecede a escolha e a aplicação de qualquer modelo de anonimização, pois diferentes estruturas e atributos exigem diferentes estratégias de proteção.
+
+% --- Início da Seção: Métodos e Técnicas de Anonimização de Dados ---
+
 \section{Métodos e Técnicas de Anonimização de Dados}
 \label{sec:fund-metodos-anon}
 
-\subsection{Abordagens Iniciais: Generalização e Supressão (k-Anonimato)}
+A aplicação de qualquer método de anonimização busca atingir um balanço entre três objetivos principais: preservar a \textbf{privacidade} do titular, garantir a \textbf{utilidade} dos dados para análise e manter a \textbf{veracidade} das informações, assegurando que cada registro anonimizado corresponda a um registro original \cite{Olatunji2024}. Contudo, a literatura é unânime em afirmar que não existe um método universal, aplicável a todos os cenários. A escolha da abordagem correta depende da estrutura dos dados, dos riscos de privacidade específicos e do nível de utilidade que se deseja manter \cite{Vovk2023}. A seguir, serão discutidos os principais paradigmas de anonimização, começando pelos modelos que se tornaram a base para o campo.
+
+% ---
+\subsection{Proteção Contra a Divulgação de Identidade: O k-Anonimato}
 \label{subsec:fund-k-anonimato}
-% Explique o conceito de k-Anonimato, como ele funciona na prática (agrupando indivíduos) e
-% discuta suas principais vulnerabilidades, como o ataque de homogeneidade.
 
-\subsection{Refinando a Proteção: l-Diversidade e t-Proximidade}
+O modelo de privacidade mais conhecido e fundamental é o \textbf{k-anonimato}, cujo objetivo é proteger contra a divulgação de identidade (\textit{identity disclosure}), ou seja, a ligação direta de um registro a um indivíduo \cite{Sepas2022, Vovk2023}. Um conjunto de dados satisfaz o k-anonimato se cada registro for indistinguível de pelo menos $k-1$ outros registros no que diz respeito ao conjunto de Quasi-Identificadores (QI) \cite{Zuo2021Data, Olatunji2024}. Na prática, isso é alcançado por meio de técnicas de \textbf{generalização} (ex: substituir a idade "34" pelo intervalo "30-40") e \textbf{supressão} (ex: remover um registro atípico, ou outlier, que comprometeria a formação de um grupo) \cite{Sepas2022}. A formalização simples do modelo é:
+$$L_{KA} = k, \text{ tal que } \forall E : |E| \geq k$$
+Onde $E$ representa uma classe de equivalência (o grupo de registros indistinguíveis).
+
+Contudo, apesar de sua importância fundamental, o k-anonimato possui vulnerabilidades conhecidas. A primeira é a "maldição da dimensionalidade", onde o custo computacional e a perda de informação aumentam exponencialmente com a quantidade de atributos (QIs) a serem anonimizados \cite{Zuo2021Data}. Mais importante, o modelo é suscetível a dois ataques principais. O \textbf{ataque de homogeneidade} ocorre quando todos os registros em uma classe de equivalência possuem o mesmo valor para um atributo sensível, permitindo a inferência com 100\% de certeza. O \textbf{ataque de conhecimento} (\textit{background knowledge attack}) ocorre quando um adversário utiliza informações externas para reduzir as possibilidades dentro de um grupo e inferir o atributo sensível \cite{Zuo2021Data, Vovk2023}. Essas limitações motivaram o desenvolvimento de modelos mais robustos.
+
+% ---
+\subsection{Refinando a Proteção: l-Diversidade e t-Closeness}
 \label{subsec:fund-l-diversidade}
-% Descreva como a l-Diversidade e a t-Proximidade surgiram para corrigir as falhas
-% do k-Anonimato, adicionando requisitos sobre a variedade dos dados sensíveis nos grupos.
 
-\subsection{Técnicas de Randomização e Perturbação}
-\label{subsec:fund-randomizacao}
-% Apresente brevemente outras técnicas, como a adição de ruído aleatório, e discuta
-% seus prós e contras em relação à utilidade dos dados.
+Para endereçar as vulnerabilidades do k-anonimato, especificamente o ataque de homogeneidade, o modelo de \textbf{l-diversidade} foi proposto para proteger contra a divulgação de atributos (\textit{attribute disclosure}) \cite{Sepas2022}. A l-diversidade exige que cada classe de equivalência (o grupo k-anônimo) contenha pelo menos '$l$' valores distintos para o atributo sensível \cite{Zuo2021Data, Olatunji2024}. Essa garantia de diversidade interna impede a inferência direta que era possível no modelo anterior. A versão mais comum, a Entropia l-Diversidade, é formalizada como:
+$$L_{ELD} = l, \text{ tal que } \forall E : H(S_E) \geq \log(l)$$
+Onde $H(S_E)$ é a entropia da distribuição do atributo sensível $S$ na classe de equivalência $E$.
 
-\subsection{Privacidade Diferencial: O Padrão-Ouro de Garantia Matemática}
+Ainda assim, a l-diversidade também apresenta vulnerabilidades. O modelo não protege contra o \textbf{ataque de similaridade semântica}, onde os '$l$' valores distintos podem ser conceitualmente próximos (ex: um grupo com os diagnósticos "gastrite", "úlcera gástrica" e "câncer de estômago" permite inferir que o indivíduo possui um problema gástrico) \cite{Olatunji2024}. Além disso, o modelo é vulnerável ao \textbf{ataque de assimetria} (\textit{skewness attack}), quando a distribuição geral de um atributo sensível é muito diferente da distribuição dentro de um grupo específico, permitindo inferências estatísticas \cite{Zuo2021Data}.
+
+Para mitigar essas falhas, foi introduzido o modelo de \textbf{t-closeness}. Ele refina a l-diversidade ao exigir que a distribuição de probabilidade do atributo sensível dentro de cada classe de equivalência seja próxima (a uma distância máxima de '$t$') da distribuição desse mesmo atributo no conjunto de dados completo \cite{Zuo2021Data, Olatunji2024}. Ao forçar que a distribuição local imite a distribuição global, o t-closeness impede que um adversário ganhe muita informação ao descobrir a qual grupo um indivíduo pertence, oferecendo uma proteção mais robusta contra a divulgação de atributos.
+
+\begin{table}[h!]
+\centering
+\caption{Comparativo dos principais modelos de anonimização para dados relacionais.}
+\label{tab:modelos-comparativo}
+\begin{tabular}{|p{0.2\textwidth}|p{0.35\textwidth}|p{0.35\textwidth}|}
+\hline
+\textbf{Modelo} & \textbf{Protege Contra} & \textbf{Vulnerabilidades Principais} \\ \hline
+\textbf{k-Anonimato} & Divulgação de Identidade. & Ataque de homogeneidade e de conhecimento. Perda de utilidade em dados de alta dimensionalidade. \\ \hline
+\textbf{l-Diversidade} & Divulgação de Atributos (ao garantir diversidade de valores sensíveis). & Ataque de similaridade semântica e de assimetria. Dificuldade de aplicação em dados desbalanceados. \\ \hline
+\textbf{t-Closeness} & Divulgação de Atributos (ao garantir similaridade de distribuições). & Custo computacional elevado e pode ser excessivamente restritivo, levando a uma grande perda de informação. \\ \hline
+\end{tabular}
+\end{table}
+
+% ---
+\subsection{Outros Paradigmas e Técnicas Operacionais}
+\label{subsec:fund-outros-paradigmas}
+
+Além dos modelos baseados em generalização, a literatura descreve outros paradigmas para alcançar a anonimização. Uma abordagem fundamental é a \textbf{perturbação}, que consiste em substituir os valores originais, sejam eles QIs ou Atributos Sensíveis (AS), por "máscaras falsas" ou dados sintéticos gerados a partir de uma distribuição de ruído \cite{Olatunji2024}. O objetivo dessa técnica não é tornar os registros indistinguíveis, mas sim mascarar os dados verdadeiros de um indivíduo de tal forma que, embora a informação individual seja ofuscada, as propriedades estatísticas agregadas do conjunto de dados permaneçam úteis para análise \cite{Vovk2023}.
+
+Outra família de técnicas opera através da \textbf{partição dos dados}. O \textit{slicing} (fatiamento), por exemplo, particiona o dataset tanto verticalmente (agrupando atributos correlacionados em colunas) quanto horizontalmente (agrupando tuplas em "baldes" ou \textit{buckets}), dissociando atributos que, juntos, poderiam levar à reidentificação \cite{Olatunji2024}. De forma similar, a \textit{bucketization} separa os QIs dos Atributos Sensíveis; os QIs são mantidos em sua forma original, mas os AS são embaralhados aleatoriamente dentro de cada \textit{bucket}. Embora essa técnica ofereça alta utilidade por preservar os QIs, ela apresenta uma vulnerabilidade crítica: como os QIs não são alterados, a \textit{bucketization} não protege contra a divulgação de participação (\textit{membership disclosure}), ou seja, um adversário ainda pode verificar se o registro de um indivíduo está presente no dataset \cite{Olatunji2024}.
+
+Técnicas de \textbf{agregação e refinamento} também são amplamente utilizadas. A \textbf{microagregação}, por exemplo, é aplicada a atributos numéricos e funciona agrupando registros em pequenos clusters de tamanho mínimo $k$ e, em seguida, substituindo os valores de cada registro pelo centroide (média) do seu cluster \cite{Olatunji2024}. Já a \textbf{supressão}, frequentemente usada para evitar a generalização excessiva causada por outliers, pode ser aplicada em nível de registro (removendo a linha inteira, o que pode levar a uma perda excessiva de informação) ou em nível de célula (removendo apenas os valores problemáticos de QIs). A supressão em nível de célula é geralmente preferível por preservar melhor a utilidade dos dados, tratando os valores suprimidos como dados faltantes, algo que muitos modelos de machine learning conseguem acomodar \cite{Olatunji2024}.
+
+Por fim, uma abordagem conceitualmente distinta é o uso de \textbf{algoritmos criptográficos}. Em vez de modificar os dados, este paradigma utiliza funções de mão única (irreversíveis), como o \textit{hashing}, para mapear cada registro original para um novo registro único e não identificável. A premissa é que a função não pode ser revertida para se obter o dado original, garantindo a proteção da identidade \cite{Vovk2023}. Estudos indicam que essa abordagem pode alcançar um excelente balanço entre privacidade e utilidade, com perda de informação minimizada em comparação com técnicas baseadas em k-anonimato. Contudo, sua implementação prática é um desafio, geralmente exigindo maior poder computacional, mais espaço de armazenamento e uma infraestrutura mais complexa para ser realizada de forma eficaz \cite{Vovk2023}.
+
+% ---
+\subsection{O Modelo da Privacidade Diferencial}
 \label{subsec:fund-privacidade-diferencial}
-% Explique de forma conceitual o que é a Privacidade Diferencial. Foque na ideia de que a
-% saída de uma consulta é praticamente a mesma com ou sem os dados de um indivíduo específico.
-% Mencione o papel do parâmetro epsilon ($\epsilon$) no controle do balanço privacidade-utilidade.
-% Lembre-se de usar o modo matemático para o epsilon, assim: $\epsilon$.
-% ---
 
-% ---
+Um paradigma mais moderno e que oferece uma garantia de privacidade mais forte e matemática é a \textbf{Privacidade Diferencial (DP)}. Diferente dos modelos anteriores que se focam em propriedades do dataset anonimizado, a DP é uma propriedade de um algoritmo de análise. A sua intuição fundamental é garantir que a inclusão ou exclusão de qualquer registro individual no conjunto de dados tenha um impacto estatisticamente insignificante no resultado de qualquer consulta ou análise realizada \cite{Olatunji2024}. Essa garantia robustece a proteção contra ataques de reconstrução e inferência.
+
+A privacidade diferencial é formalmente definida como $\epsilon$-Privacidade Diferencial, onde $\epsilon$ (\textit{epsilon}) é o parâmetro de privacidade que quantifica a "perda de privacidade" máxima permitida por uma consulta. Um valor de $\epsilon$ menor implica em maior privacidade (e geralmente mais ruído adicionado), enquanto um valor maior implica em menor privacidade e maior precisão nos resultados. A definição formal é:
+$$\text{Pr}[A(X_1) \in S] \leq e^{\epsilon} \times \text{Pr}[A(X_2) \in S]$$
+Onde $A$ é um algoritmo randomizado, $X_1$ e $X_2$ são datasets vizinhos (diferem em apenas um registro), e $S$ é um possível resultado. O ruído para satisfazer a DP pode ser adicionado de forma \textbf{local} (em cada dado individual antes de ser coletado) ou \textbf{global} (no resultado da consulta por um curador de dados confiável), sendo a abordagem global geralmente mais acurada \cite{Olatunji2024}.
+
+A escolha de um modelo de anonimização, portanto, envolve uma análise complexa. Conforme a literatura aponta, é impossível eliminar completamente o risco de reidentificação, e a maioria dos métodos é computacionalmente custosa \cite{Sepas2022}. O principal desafio, reiterado em múltiplos estudos, é encontrar o "equilíbrio delicado" entre a proteção da privacidade e a utilidade dos dados \cite{Vovk2023, Olatunji2024}. Uma anonimização mais forte geralmente implica em maior perda de informação, o que pode impactar negativamente a qualidade das análises e dos modelos de machine learning. Essa tensão fundamental entre privacidade e utilidade exige que, além de aplicar uma técnica, seja possível medir e avaliar o resultado de ambos os aspectos.
+
+% --- Fim da Seção ---
 \section{Métricas de Avaliação: O Balanço entre Privacidade e Utilidade}
 \label{sec:fund-metricas}
 
