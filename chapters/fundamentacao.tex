@@ -102,8 +102,6 @@ Independentemente da estrutura do dado, seus atributos devem ser categorizados p
 
 Por fim, existem os Atributos Sensíveis (AS), que contêm as informações que se deseja proteger (ex: diagnóstico, dosagem de um medicamento), mas que não são diretamente úteis para a reidentificação \cite{Zuo2021Data}. É crucial notar que os Quasi-Identificadores frequentemente são também os atributos de maior valor para a análise científica, criando o dilema central da anonimização: como modificar ou suprimir os QIs para proteger a privacidade sem destruir a utilidade dos dados \cite{Zuo2021Data}. Compreender essa dupla categorização — tanto a estrutura do dado (relacional, grafo, etc.) quanto o tipo de atributo (ID, QI, AS) — é, portanto, o passo essencial que antecede a escolha e a aplicação de qualquer modelo de anonimização, pois diferentes estruturas e atributos exigem diferentes estratégias de proteção.
 
-% --- Início da Seção: Métodos e Técnicas de Anonimização de Dados ---
-
 \section{Métodos e Técnicas de Anonimização de Dados}
 \label{sec:fund-metodos-anon}
 
@@ -168,27 +166,40 @@ Onde $A$ é um algoritmo randomizado, $X_1$ e $X_2$ são datasets vizinhos (dife
 
 A escolha de um modelo de anonimização, portanto, envolve uma análise complexa. Conforme a literatura aponta, é impossível eliminar completamente o risco de reidentificação, e a maioria dos métodos é computacionalmente custosa \cite{Sepas2022}. O principal desafio, reiterado em múltiplos estudos, é encontrar o "equilíbrio delicado" entre a proteção da privacidade e a utilidade dos dados \cite{Vovk2023, Olatunji2024}. Uma anonimização mais forte geralmente implica em maior perda de informação, o que pode impactar negativamente a qualidade das análises e dos modelos de machine learning. Essa tensão fundamental entre privacidade e utilidade exige que, além de aplicar uma técnica, seja possível medir e avaliar o resultado de ambos os aspectos.
 
-% --- Fim da Seção ---
 \section{Métricas de Avaliação: O Balanço entre Privacidade e Utilidade}
 \label{sec:fund-metricas}
 
+A aplicação de um modelo de anonimização não é um fim em si mesma, mas o início de um processo iterativo de avaliação. Conforme aponta a literatura, este processo consiste em três etapas essenciais: (1) aplicar um modelo de privacidade; (2) quantificar o risco de reidentificação; e (3) avaliar a utilidade dos dados resultantes \cite{Ferrao2022}. Apenas ao analisar essas duas últimas etapas é possível aferir o sucesso do método e encontrar um equilíbrio razoável entre a proteção da privacidade do indivíduo e a preservação do valor científico dos dados. Esta seção detalha as principais métricas utilizadas para quantificar ambos os lados dessa equação.
+
 \subsection{Avaliação do Risco de Reidentificação (Métricas de Privacidade)}
 \label{subsec:fund-metricas-privacidade}
-% Descreva como se pode quantificar o risco de um indivíduo ser reidentificado em um dataset
-% anonimizado. Apresente algumas métricas ou modelos de risco.
+
+A quantificação do risco de privacidade em um dataset anonimizado não é uma medida absoluta, mas uma estimativa que depende fundamentalmente do que se assume sobre as capacidades e o conhecimento de um potencial adversário. A literatura enfatiza que a avaliação do risco deve modelar o conhecimento de fundo (background knowledge) do adversário, que pode ser obtido de diversas fontes, como redes sociais, estatísticas demográficas ou outros bancos de dados públicos \cite{Ferrao2022}. Para estruturar essa análise, são comumente considerados três perfis de ataque, que variam conforme a motivação e o conhecimento prévio do atacante.
+
+Esses perfis são o risco de promotor (\textit{prosecutor risk}), o risco de jornalista (\textit{journalist risk}) e o risco de profissional de marketing (\textit{marketer risk}) \cite{Ferrao2022}. O risco de promotor modela o cenário em que o adversário sabe que um indivíduo específico está no dataset e seu objetivo é provar isso, sendo a métrica de risco geralmente associada à proporção de registros únicos no conjunto de dados. O risco de jornalista, por sua vez, representa a situação em que o adversário não tem certeza se o alvo está no dataset, mas tenta encontrá-lo. Finalmente, o risco de profissional de marketing quantifica a taxa média de sucesso de um adversário que tenta reidentificar o maior número possível de indivíduos, sem um alvo específico. Esses riscos seguem uma hierarquia, onde o risco de promotor é maior ou igual ao de jornalista, que por sua vez é maior ou igual ao de profissional de marketing \cite{Ferrao2022}. Ferramentas de anonimização, como o software de código aberto ARX, já implementam estimativas para esses três modelos de ataque.
+
+Para estimar esses riscos de forma quantitativa, diversas métricas foram propostas na literatura. Uma família de métricas se baseia na probabilidade de ligação de registros (\textit{record linkage}) entre o dataset original e o anonimizado. A Divulgação por Ligação de Distância (Distance Linked Disclosure - DLD), por exemplo, mede a porcentagem de registros que podem ser corretamente ligados ao seu correspondente mais próximo no dataset protegido, usando uma métrica de distância como a Euclidiana. De forma análoga, a Divulgação por Ligação Probabilística (Probabilistic Linkage Disclosure - PLD) utiliza modelos probabilísticos para o mesmo fim. Uma outra métrica, a Divulgação por Intervalo (Interval Disclosure - ID), é específica para atributos numéricos e calcula a porcentagem de valores originais que se encontram dentro do intervalo generalizado no dado anonimizado \cite{Zuo2021Data}.
+
+Além das métricas baseadas em ligação direta, existem abordagens mais globais que buscam estimar o risco em nível populacional, extrapolando a partir da amostra disponível. A métrica de Unicidade Populacional (Population Uniqueness) busca estimar a proporção de registros que são únicos não apenas na amostra, mas na população subjacente, o que exige informações adicionais como o tamanho da população e a fração de amostragem. Já os Modelos Log-Lineares (Log-linear Models - LLM) são uma abordagem estatística que modela as frequências da amostra para estimar o número de "matches" corretos para os registros únicos, caso fossem confrontados com a população inteira \cite{Zuo2021Data}. Essas métricas mais sofisticadas fornecem uma visão mais holística do risco de reidentificação.
 
 \subsection{Avaliação da Utilidade dos Dados Anonimizados (Métricas de Qualidade)}
 \label{subsec:fund-metricas-utilidade}
-% Detalhe as duas abordagens principais para medir a qualidade/utilidade dos dados:
-% 1. Similaridade estatística (comparação de distribuições, correlações, etc.).
-% 2. Performance em tarefas de Machine Learning (comparando a performance de um modelo
-%    treinado nos dados originais vs. nos dados anonimizados).
-% ---
+
+Qualquer processo de anonimização, seja por generalização, supressão ou perturbação, inevitavelmente causa alguma perda de informação. O objetivo das métricas de utilidade é quantificar essa perda e avaliar a qualidade dos dados resultantes para fins de análise. A literatura divide essas métricas em duas categorias principais: as de propósito geral, que medem a similaridade entre o dado original e o anonimizado, e as de propósito específico, que avaliam o desempenho dos dados em uma tarefa particular \cite{Ferrao2022}.
+
+As métricas de propósito geral focam na quantificação da \textbf{perda de informação} (\textit{information loss}). A literatura apresenta uma vasta gama de abordagens, como a Perda de Informação Generalizada (GIL), a Métrica de Discernibilidade (DM), que mede o quão indistinguível um registro se tornou, e a Métrica de Perda (LM) \cite{Zuo2021Data, Lee2017}. Contudo, muitas dessas métricas clássicas são criticadas por não considerarem a \textbf{veracidade dos dados} (\textit{data truthfulness}), especialmente em técnicas que inserem registros falsos. Uma métrica mais robusta, nesse sentido, é o \textbf{Erro de Reconstrução} (\textit{Reconstruction Error} - RCE), que mede a similaridade entre os dados originais e anonimizados comparando suas funções de densidade de probabilidade \cite{Lee2017}. O RCE é definido como:
+$$ \text{RCE} = \sum_{\forall t \in T} \int_{x \in DS} (\tilde{\mathcal{G}}_{t}(x)-\mathcal{G}_{t}(x))^{2} \mathrm{d} x $$
+Onde $\mathcal{G}_{t}(x)$ e $\tilde{\mathcal{G}}_{t}(x)$ são as funções de densidade de probabilidade do registro original e do anonimizado, respectivamente.
+
+Para análises de propósito específico, a utilidade é medida pelo impacto da anonimização no resultado de uma tarefa concreta. Uma abordagem é medir a \textbf{taxa de erro em consultas} (\textit{query error rate}), executando a mesma consulta de agregação nos datasets original e anonimizado e comparando os resultados \cite{Lee2017}. De forma análoga e de grande relevância para a validação de dados para aprendizado de máquina, a literatura aponta para o uso da \textbf{acurácia de modelos de classificação} como a métrica de utilidade final \cite{Olatunji2024}. Neste método, compara-se a performance (ex: acurácia, AUC) de um mesmo modelo de machine learning treinado com os dados originais versus com os dados anonimizados; uma pequena queda na performance indica alta utilidade dos dados.
+
+Uma terceira via, também orientada ao propósito, avalia a utilidade pela \textbf{preservação da estrutura multivariada dos dados}, utilizando a análise de cluster como ferramenta. A premissa é que um dataset anonimizado só preserva sua utilidade para análises exploratórias se a estrutura de grupos (clusters) subjacente aos dados permanecer intacta após a anonimização \cite{Ferrao2022}. Contudo, estudos de caso demonstram que mesmo técnicas robustas de anonimização podem destruir essa estrutura em datasets de baixa dimensionalidade, enviesando os resultados de análises e prejudicando as conclusões da pesquisa \cite{Ferrao2022}.
+
+A análise das métricas de risco e utilidade deixa claro que a avaliação de um método de anonimização é um processo multifacetado. A escolha das métricas corretas depende do propósito final da análise dos dados. Conforme a literatura reitera, o desafio consiste em encontrar o "equilíbrio delicado" entre a proteção rigorosa exigida pela legislação e pela ética, e a preservação da qualidade e da veracidade dos dados, que é a condição indispensável para a geração de conhecimento científico válido e confiável \cite{Vovk2023, Ferrao2022}.
 
 % ---
 \section{Síntese da Fundamentação e Escolha da Abordagem}
 \label{sec:fund-sintese}
-% Feche o capítulo com um ou dois parágrafos que resumam o que foi apresentado e, o mais importante,
-% justifique quais técnicas e métricas discutidas aqui serão empregadas na parte prática do seu TCC.
-% Isso cria a ponte perfeita para o seu próximo capítulo (Metodologia/Desenvolvimento).
+% fechar o capítulo com um ou dois parágrafos 
+% justificam quais técnicas e métricas discutidas aqui serão empregadas na parte prática.
 % ---
