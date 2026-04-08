@@ -25,92 +25,155 @@ Para estruturar essa investigação, o estudo é organizado em torno de variáve
 
 O experimento seguirá o método comparativo rigoroso. Será estabelecido um "Grupo de Controle", composto pelos dados originais apenas desidentificados (sem generalização), que servirá como a linha de base (\textit{baseline}) de performance ideal. Em contrapartida, serão criados múltiplos "Grupos Experimentais", compostos pelos mesmos dados submetidos a diferentes configurações de anonimização. A comparação direta entre o controle e os grupos experimentais permitirá isolar o impacto da anonimização, quantificando a degradação da performance do modelo de IA como uma função do aumento da privacidade.
 
-\section{Aquisição e Seleção da Base de Dados}
+\section{Aquisição e Definição da Amostra (MIMIC-III)}
 \label{sec:metod-aquisicao}
 
-A validade de um estudo sobre anonimização depende intrinsecamente da qualidade, da granularidade e da complexidade dos dados utilizados. Embora o uso de dados sintéticos seja comum em testes preliminares de software, eles frequentemente falham em capturar as nuances, os ruídos, os erros de preenchimento humano e as correlações não-lineares presentes em registros médicos do mundo real. Utilizar dados perfeitos demais poderia levar a conclusões excessivamente otimistas sobre a facilidade de anonimização.
+% TODO: explicar porque usamos o MIMIC-III usando literatura e comparações
 
-Para mitigar esse risco e garantir a relevância prática dos resultados, este trabalho utilizará bases de dados obtidas através da plataforma \textit{PhysioNet} \cite{Goldberger2000}. O \textit{PhysioNet} é um repositório de referência mundial para dados complexos de pesquisa médica, gerido pelo MIT Laboratory for Computational Physiology. O acesso a estes dados não é público; ele requer um processo de credenciamento rigoroso, que inclui a conclusão de treinamento certificado em ética em pesquisa com seres humanos e a assinatura de acordos de uso de dados que proíbem a tentativa de reidentificação. O autor deste trabalho já cumpriu todas as etapas e obteve o credenciamento necessário para o acesso.
+A validade de um estudo sobre anonimização depende intrinsecamente da qualidade, da granularidade e da complexidade dos dados utilizados. Para garantir a relevância prática dos resultados, este trabalho utilizou dados obtidos através da plataforma \textit{PhysioNet} \cite{Goldberger2000}, um repositório de referência mundial para pesquisa médica gerido pelo MIT Laboratory for Computational Physiology. O acesso foi obtido através de processo de credenciamento rigoroso que incluiu treinamento certificado em ética em pesquisa com seres humanos.
 
-Dentre os vastos conjuntos de dados disponíveis no repositório, foram identificados os seguintes candidatos principais para este estudo:
+Foi selecionado o banco de dados \textbf{MIMIC-III v1.4} \cite{Johnson2016}, um repositório relacional contendo informações desidentificadas de aproximadamente 60.000 admissões em Unidades de Terapia Intensiva do \textit{Beth Israel Deaconess Medical Center}. A estrutura complexa, com tabelas interligadas de dados demográficos, sinais vitais, procedimentos e diagnósticos, oferece o cenário ideal para testar a robustez dos algoritmos de anonimização em contextos clínicos realistas.
+
+% TODO: ter uma seção dedicada somente a limpeza de dados, entrando em detalhes e citando o preparo de dados do Harutyunyan2019
+
+O processo de filtragem da amostra ocorreu em duas etapas. Inicialmente, restringiu-se a amostra a pacientes adultos ($\geq 18$ anos), estabelecendo um universo primário de $N_{\text{total}} = 42.277$ admissões. Esta base completa foi utilizada para os cálculos de proteção de privacidade na ferramenta ARX, visando fornecer aos algoritmos máxima diversidade demográfica para a auditoria de risco de reidentificação.
+
+Em uma segunda etapa, foi aplicado o critério de duração mínima de permanência em UTI. O modelo ConCare requer séries temporais fisiológicas completas de 48 horas para seu funcionamento. Admissões com duração inferior a 48 horas foram removidas, resultando em uma amostra analítica final de $N_{\text{task}} = 17.917$ admissões para treinamento, validação e teste do modelo preditivo. A \autoref{tab:amostra-caracterizacao} apresenta a caracterização demográfica e clínica desta coorte final.
+
+% TODO: checar se esses dados estão corretos
+
+\begin{table}[ht]
+\centering
+\caption{Caracterização da Amostra Analítica Final ($N = 17.917$)}
+\label{tab:amostra-caracterizacao}
+\begin{tabular}{ll}
+\toprule
+\textbf{Característica} & \textbf{Valor / Estatística} \\ \midrule
+Total de Admissões & 17.917 \\
+Duração média de permanência (horas) & $73.4 \pm 52.1$ \\
+Idade média (anos) & $63.9 \pm 17.5$ \\
+Gênero (Female / Male) & 44.1\% / 55.9\% \\
+Mortalidade hospitalar & 10.6\% (1.899 óbitos) \\
+\midrule
+\textbf{Principais Comorbidades (CCS)} & \textbf{Prevalência} \\
+Essential Hypertension & 41.6\% \\
+Cardiac Arrhythmias & 37.5\% \\
+Heart Failure & 32.9\% \\
+Coronary Atherosclerosis & 32.8\% \\
+Fluid Disorders & 31.3\% \\
+\bottomrule
+\end{tabular}
+\fonte{Elaborado pelo autor, conforme dados do MIMIC-III filtrado segundo critérios de inclusão/exclusão do estudo.}
+\end{table}
+
+\section{Modelo de Referência para Avaliação de Utilidade Clínica}
+\label{sec:metod-concare}
+
+Uma das maiores dificuldades na literatura de anonimização é definir o que constitui "utilidade aceitável". Métricas puramente estatísticas, como a "perda de informação" (\textit{Information Loss}), são abstratas e muitas vezes não refletem a viabilidade prática do dado para aplicações clínicas reais. Para resolver isso, este trabalho adota uma abordagem orientada à tarefa (\textit{task-based evaluation}). A premissa é simples: o dado é útil se ele permite resolver o problema clínico para o qual foi coletado.
+
+% TODO: Justificar a escolha do modelo usando literatura e comparação
+
+Foi selecionado o modelo \textbf{ConCare} \cite{Ma2020} como referência para avaliação de utilidade. O ConCare é uma arquitetura de rede neural que se distingue pela integração explícita de dados estáticos (demográficos) com séries temporais fisiológicas através de um mecanismo de \textit{Cross-Attention}. Esta escolha é particularmente rigorosa para testar o impacto da anonimização, pois os dados demográficos (Age, Gender, Ethnicity) — precisamente os atributos atacados pela anonimização — são componentes fundamentais do processamento do modelo. Uma degradação na precisão desses atributos impacta diretamente a capacidade do ConCare de ponderar a importância de momentos específicos durante a trajetória clínica.
+
+% TODO: explicar porque predição de mortalidade foi a tarefa escolhida usando literatura e dados reais
+
+A tarefa clínica selecionada é a \textbf{predição de mortalidade hospitalar}, um problema crítico de prognóstico em UTI, clinicamente relevante, e que depende essencialmente tanto de dados temporais (sinais vitais, exames laboratoriais) quanto de contexto demográfico estático. O desempenho do modelo ConCare treinado nos dados originais sem anonimização adicional estabelece a \textit{baseline} (linha de base) de performance ideal. As comparações posteriores com os dados anonimizados permitem quantificar a degradação de utilidade como uma função direta do aumento de proteção de privacidade.
+
+\section{Definição de Quasi-Identificadores, Atributos Sensíveis e Outcome}
+\label{sec:metod-categorias}
+
+Para a aplicação eficaz de técnicas de anonimização, foi realizada a classificação semântica dos atributos conforme o modelo de análise de risco proposto por El Emam e Arbuckle \cite{ElEmam2011}. Na avaliação da privacidade, foram definidos os seguintes componentes:
 
 \begin{itemize}
-    \item \textbf{MIMIC-III (\textit{Medical Information Mart for Intensive Care III}):} Um banco de dados relacional abrangente contendo informações de saúde desidentificadas relacionadas a mais de quarenta mil pacientes que permaneceram em unidades de terapia intensiva do Beth Israel Deaconess Medical Center. Sua estrutura complexa, com tabelas interligadas de dados demográficos, sinais vitais, procedimentos e notas clínicas, oferece o cenário ideal para testar a robustez dos algoritmos de anonimização \cite{Johnson2016}.
-    \item \textbf{MIMIC-IV:} A versão mais recente e atualizada do dataset anterior, incorporando novas estruturas de dados que refletem melhor os sistemas de prontuários eletrônicos contemporâneos e permitindo análises mais atuais \cite{Johnson2020}.
-    \item \textbf{eICU Collaborative Research Database:} Um conjunto de dados multicêntrico de unidades de terapia intensiva de diversos hospitais nos Estados Unidos, o que permite validar se as técnicas de anonimização são generalizáveis para dados provenientes de diferentes instituições e culturas de registro \cite{Pollard2018}.
+    \item \textbf{Quasi-Identificadores (QIs):} \textbf{Age} (idade em anos), \textbf{Gender} (sexo: Male/Female), e \textbf{Ethnicity} (etnia: categorias disponíveis no MIMIC-III). Estes três atributos foram selecionados como os alvos principais das técnicas de anonimização, pois sua combinação pode levar à reidentificação quando ligados a bases de dados externas.
+    \item \textbf{Atributo Sensível (AS):} \textbf{Primary Diagnosis} (diagnóstico principal, codificado segundo ICD-9). O objetivo da anonimização é quebrar a associação determinística entre os QIs e este atributo, impedindo que um adversário infira o diagnóstico a partir de informações demográficas.
+    \item \textbf{Outcome:} \textbf{Mortality} (resultado: óbito hospitalar sim/não). Este é o rótulo de classe utilizado para treinamento e avaliação do modelo ConCare.
+    \item \textbf{Atributos Preservados:} \textbf{Gender} foi preservado em todos os cenários de anonimização, como consta na metodologia de proteção clínica, pois sua perda teria impacto excessivo na utilidade clínica sem ganho significativo de privacidade.
 \end{itemize}
 
-A seleção final do \textit{dataset} será pautada pela presença rica de atributos que se enquadrem nas definições de Identificadores Diretos, Quasi-Identificadores e Atributos Sensíveis, conforme definido na \autoref{subsec:fund-dados-categorizacao}. É essencial que o dataset contenha correlações fortes entre dados demográficos (QIs) e desfechos clínicos (AS), pois é nesse cenário que o desafio da anonimização é maximizado: proteger a identidade sem destruir a correlação que o modelo de IA precisa aprender.
+\section{Aplicação de Técnicas de Anonimização}
+\label{sec:metod-anonimizacao}
 
-\section{Definição do Cenário de Referência (Baseline)}
-\label{sec:metod-referencia}
+% TODO: expandir explicação e jusiticativa para o uso da ferramenta, usando literatura e comparação com outras ferramentas
 
-Uma das maiores dificuldades na literatura de anonimização é definir o que constitui "utilidade aceitável". Métricas puramente estatísticas, como a "perda de informação" (Information Loss), são abstratas e muitas vezes não refletem a viabilidade prática do dado. Para resolver isso, este trabalho adota uma abordagem baseada em tarefa (\textit{task-based evaluation}). A premissa é simples: o dado é útil se ele permite resolver o problema clínico para o qual foi coletado.
-
-Esta etapa consiste em selecionar e reproduzir um estudo de referência ("Estado da Arte") que tenha utilizado a mesma base de dados escolhida (por exemplo, o MIMIC-III) para treinar um modelo de Inteligência Artificial. Não se trata de criar um novo modelo de IA do zero, mas sim de utilizar um modelo validado pela comunidade científica como uma "sonda" para medir a qualidade dos dados.
-
-A escolha do trabalho de referência seguirá critérios rigorosos:
-\begin{enumerate}
-    \item \textbf{Reprodutibilidade:} O trabalho deve ter metodologia clara, preferencialmente com código aberto disponível, permitindo a replicação fiel das etapas de pré-processamento e treinamento.
-    \item \textbf{Relevância Clínica:} O modelo deve resolver um problema real e complexo, como a predição de mortalidade hospitalar, a previsão de tempo de permanência na UTI ou a detecção precoce de sepse.
-    \item \textbf{Dependência de Dados Demográficos:} O modelo deve utilizar variáveis demográficas (idade, gênero, CEP) como \textit{features} importantes. Como a anonimização ataca principalmente esses atributos, modelos que dependem deles são os mais sensíveis à perda de qualidade, tornando o teste mais rigoroso.
-\end{enumerate}
-
-Trabalhos de revisão sistemática e \textit{surveys} sobre o uso de \textit{Machine Learning} em dados de UTI serão consultados para identificar o candidato ideal. O desempenho deste modelo "original", treinado nos dados sem anonimização adicional, servirá como a Linha de Base (\textit{Baseline}) para todas as comparações subsequentes.
-
-\section{Preparação e Análise dos Dados}
-\label{sec:metod-preparacao}
-
-Antes que qualquer algoritmo de privacidade possa ser aplicado, os dados brutos devem passar por um processo de preparação e entendimento. A anonimização não é um processo "caixa preta" que aceita qualquer entrada; ela exige dados estruturados e limpos.
-
-\subsection{Análise Exploratória e Limpeza}
-Nesta fase, será realizada uma Análise Exploratória de Dados (EDA) para compreender a distribuição, a cardinalidade e as correlações entre as variáveis. Serão identificados e tratados valores ausentes (\textit{missing values}) e inconsistências. Uma decisão metodológica importante nesta etapa é definir se o tratamento de dados faltantes ocorre antes ou depois da anonimização, pois a imputação de dados pode, inadvertidamente, alterar a unicidade dos registros, afetando o risco de reidentificação.
-
-\subsection{Categorização de Atributos}
-A etapa mais crítica para a configuração dos algoritmos de privacidade é a classificação semântica dos atributos. Conforme fundamentado na \autoref{subsec:fund-dados-categorizacao}, cada coluna do \textit{dataset} será analisada e classificada manualmente nas seguintes categorias:
-
-\begin{itemize}
-    \item \textbf{Identificadores Diretos (IDs):} Atributos que identificam inequivocamente o paciente, como nomes, números de prontuário e números de seguro social. Estes serão removidos imediatamente ou pseudonimizados com hash criptográfico irreversível, garantindo a desidentificação básica.
-    \item \textbf{Quasi-Identificadores (QIs):} Atributos que, isoladamente, não identificam, mas que combinados podem levar à reidentificação (ataque de ligação). Exemplos incluem data de nascimento, gênero, código postal e data de admissão. Estes serão os alvos principais das técnicas de generalização.
-    \item \textbf{Atributos Sensíveis (AS):} Informações que devem ser protegidas, como diagnósticos (códigos CID), resultados laboratoriais e prescrições. O objetivo da anonimização é quebrar o vínculo entre os QIs e os AS.
-    \item \textbf{Atributos Insensíveis:} Dados que não identificam nem revelam informações sensíveis e que podem ser mantidos inalterados para preservar a utilidade estatística.
-\end{itemize}
-
-\section{Processo de Anonimização}
-\label{sec:metod-aplicacao-anonimizacao}
-
-Esta é a etapa central do desenvolvimento, onde os dados são transformados para atender aos requisitos de privacidade. Para a execução destas técnicas, serão utilizadas ferramentas de código aberto especializadas em anonimização de dados biomédicos. A principal ferramenta considerada é o \textbf{ARX Data Anonymization Tool} \cite{Prasser2014}, escolhida devido à sua robustez, capacidade de lidar com grandes volumes de dados e, principalmente, por oferecer métricas de risco integradas que facilitam a auditoria.
+O processo de anonimização foi executado utilizando o \textbf{ARX Data Anonymization Tool} \cite{Prasser2014}, uma plataforma especializadamente projetada para anonimização de dados biomédicos. O ARX oferece implementações robustas de k-anonimato, l-diversidade, e t-closeness, além de métricas de risco integradas que facilitam a auditoria de proteção.
 
 \subsection{Definição de Hierarquias de Generalização}
-Para aplicar técnicas como o k-anonimato, não basta apenas suprimir dados; é necessário definir \textit{como} os dados podem ser generalizados preservando algum significado. Serão construídas árvores de generalização (taxonomias) para cada Quasi-Identificador:
-\begin{itemize}
-    \item \textbf{Idade:} Valores exatos $\rightarrow$ Faixas de 5 anos $\rightarrow$ Faixas de 10 anos $\rightarrow$ Ciclo de vida (Criança, Adulto, Idoso) $\rightarrow$ Supressão total.
-    \item \textbf{Localização:} CEP completo $\rightarrow$ CEP 3 dígitos $\rightarrow$ Cidade $\rightarrow$ Estado $\rightarrow$ Região.
-    \item \textbf{Datas:} Data completa $\rightarrow$ Mês/Ano $\rightarrow$ Ano $\rightarrow$ Década.
-\end{itemize}
-A qualidade dessas hierarquias é determinante: hierarquias mal construídas destroem a utilidade dos dados rapidamente antes mesmo de atingirem o nível de privacidade desejado.
 
-\subsection{Execução dos Algoritmos}
-O processo de anonimização será iterativo. Serão geradas múltiplas versões do dataset, variando os parâmetros de privacidade para criar um espectro de proteção que permita a análise de sensibilidade:
+% TODO: expandir justificativa para essas definições usando dados reais e literatura
+
+Para cada quasi-identificador, foram definidas hierarquias de generalização (taxonomias) que permitem a progressiva transformação dos valores, do mais específico ao mais generalizado, preservando significado clínico. As hierarquias foram configuradas da seguinte forma:
+
 \begin{itemize}
-    \item \textbf{Cenário A (Proteção Leve):} Aplicação de k-anonimato com $k=2$ ou $k=3$. Foco em alta utilidade, aceitando um risco residual maior.
-    \item \textbf{Cenário B (Proteção Moderada):} Aumento do parâmetro para $k=5$ a $k=10$, possivelmente combinado com l-diversidade para atributos sensíveis críticos. Este cenário busca o equilíbrio recomendado pela literatura.
-    \item \textbf{Cenário C (Proteção Elevada):} Aplicação de critérios rigorosos, como $k>20$ ou t-closeness, ou ainda técnicas de Privacidade Diferencial ($\epsilon$ baixo). Este cenário testa o limite da utilidade dos dados.
+    \item \textbf{Age (Idade):} Valor exato (e.g., 64 anos) $\rightarrow$ Faixas de 5 anos (e.g., 60-65) $\rightarrow$ Faixas de 10 anos (e.g., 60-70).
+    \item \textbf{Ethnicity (Etnia):} Categorias específicas (Caucasian, African American, Asian, etc.) $\rightarrow$ Supressão (indicada como "*").
+    \item \textbf{Gender (Sexo):} Preservado em seu valor original em todos os cenários (Male / Female).
 \end{itemize}
 
-\section{Avaliação de Resultados}
+\subsection{Configuração dos Cenários de Privacidade}
+
+Foram definidos três cenários de anonimização progressiva, aplicados à amostra total ($N = 42.277$) antes da filtragem de duração mínima de permanência, visando fornecer máxima diversidade demográfica para as métricas de risco:
+
+\begin{table}[ht]
+\centering
+\caption{Configuração dos Cenários Experimentais de Anonimização}
+\label{tab:cenarios-anonimizacao}
+\small
+\begin{tabular}{l|p{3cm}|p{2.5cm}|p{2.5cm}|p{2cm}}
+\hline
+\textbf{Scenario} & \textbf{Technique / Config.} & \textbf{Age Treatment} & \textbf{Ethnicity Treatment} & \textbf{Gender} \\ \hline
+\textbf{Baseline} & Original Data (No anonymization) & Exact Value & Original (Detailed) & Original \\ \hline
+\textbf{Scenario A} & $k$-Anonymity ($k=5$) \newline Outlier Suppression & 5-year bands & Suppressed (*) & Original \\ \hline
+\textbf{Scenario B} & $k$-Anonymity ($k=10$) \newline $l$-Diversity ($l=2$) & 10-year bands & Suppressed (*) & Original \\ \hline
+\textbf{Scenario C} & Differential Privacy \newline ($\epsilon=2.0$, $\delta=10^{-5}$) & 10-year bands & Original (Preserved) & Original \\ \hline
+\end{tabular}
+\end{table}
+
+A justificativa para cada cenário é a seguinte:
+
+\begin{itemize}
+    \item \textbf{Scenario A ($k=5$):} Representa uma proteção sintática leve, focando em alta utilidade com risco residual moderado. A supressão de Ethnicity reflete a dificuldade computacional de manter granulosidade em faixas etárias finas (5anos) enquanto se atinge $k=5$. Este cenário testa o balanço recomendado por diretrizes clínicas iniciais de de-identificação \cite{ElEmam2011}.
+    
+    \item \textbf{Scenario B ($k=10, l=2$):} Representa uma proteção sintática robusta, onde o aumento de $k$ para 10 combinado com l-diversidade fornece garantias semânticas contra ataques de homogeneidade. A faixa de 10 anos para Age é necessária para atender simultaneamente os critérios de $k=10$ e $l=2$. Este cenário alcança um equilíbrio conservador recomendado para dados clínicos sensíveis \cite{Machanavajjhala2007}.
+    
+    \item \textbf{Scenario C (Differential Privacy, $\epsilon=2.0$):} Representa uma proteção probabilística rigorosa. O valor $\epsilon=2.0$ foi selecionado como ponto de equilíbrio empírico em aplicações de privacidade diferencial em saúde, oferecendo garantia matemática forte ("plausible deniability") enquanto preserva a viabilidade de treinamento de modelos complexos. A preservação de Ethnicity em valores originais reflete a estratégia de mitigar potenciais enviesamentos algorítmicos por meio da precisão demográfica, ao custo da amostra (discussão de data loss abaixo).
+\end{itemize}
+
+\section{Avaliação de Risco de Reidentificação e Utilidade Clínica}
 \label{sec:metod-avaliacao}
 
-A avaliação final será conduzida em duas dimensões complementares, permitindo responder à questão de pesquisa sobre a viabilidade do uso desses dados.
+A avaliação foi conduzida em duas dimensões complementares: (1) quantificação do risco de reidentificação residual; e (2) avaliação da utilidade clínica através do desempenho do modelo preditivo. Esta estrutura bidirecional permite responder à questão central de pesquisa sobre a viabilidade de equilibrar privacidade e utilidade em dados clínicos.
 
-\subsection{Análise de Risco de Reidentificação}
-Cada dataset gerado nos cenários acima será submetido a uma "auditoria de ataque". Nesta etapa, assumiremos o papel de um adversário hipotético tentando reidentificar os titulares. Serão calculadas as métricas de risco definidas na \autoref{subsec:fund-metricas-privacidade}, incluindo a proporção de registros únicos na amostra e na população, bem como o Risco de Promotor, Jornalista e Profissional de Marketing. Esta análise validará se o dataset cumpre os requisitos legais de anonimização "razoável" exigidos pela LGPD.
+\subsection{Auditoria de Risco de Reidentificação}
 
-\subsection{Análise de Utilidade dos Dados}
-A utilidade será avaliada sob dois prismas para garantir uma visão holística:
+Cada dataset gerado nos três cenários foi submetido a uma auditoria de risco de reidentificação usando a ferramenta ARX. A auditoria modelou três perfis de ataque distintos, conforme a taxonomia de El Emam \cite{ElEmam2011}:
+
+% TODO: adicionar na fundamentação teórica
+
 \begin{enumerate}
-    \item \textbf{Utilidade Geral (Estatística):} Comparação direta das propriedades estatísticas do dataset anonimizado com o original. Serão utilizadas métricas como a perda de informação (\textit{Information Loss}) e a comparação de Matrizes de Correlação. O objetivo é garantir que a estrutura dos dados, conforme discutido na \autoref{subsec:fund-metricas-utilidade}, não foi destruída pelo processo.
-    \item \textbf{Utilidade Específica (Machine Learning):} O teste definitivo. O modelo de IA de referência (definido na \autoref{sec:metod-referencia}) será treinado novamente utilizando exclusivamente os dados anonimizados. A perda de performance será calculada pela diferença nas métricas de avaliação (como AUC-ROC, F1-Score e Acurácia) em comparação ao Baseline.
+    \item \textbf{Prosecutor Risk (Risco de Promotor):} Representa o cenário em que o adversário já sabe que um indivíduo específico está no dataset e tenta provar isso. É calculado como a proporção máxima de risco, equivalente a $1/k_{\min}$, onde $k_{\min}$ é o tamanho do menor grupo de equivalência.
+    
+    \item \textbf{Journalist Risk (Risco de Jornalista):} Representa um adversário que não tem certeza se o alvo está no dataset. É mitigado aplicando ajustes estatísticos baseados na proporção esperada da população, resultando frequentemente em valores similares ao Prosecutor Risk para pequenas proporções de amostragem.
+    
+    \item \textbf{Marketer Risk (Risco de Profissional de Marketing):} Representa um adversário sem alvo específico tentando reidentificar o máximo possível de registros. É medido como a taxa média esperada de sucesso ($E[1/k]$) em toda a população.
 \end{enumerate}
 
-Ao final, os resultados serão compilados e plotados em gráficos de dispersão (Risco $\times$ Utilidade) para identificar o ponto ótimo de equilíbrio, fornecendo evidências empíricas sobre a viabilidade da anonimização para a inovação em saúde.
+Adicionalmente, foram registradas a proporção de registros únicos (registros com $k=1$) antes e depois da anonimização, bem como o impacto em termos de redução de amostra (relevante especialmente para Differential Privacy).
+
+\subsection{Avaliação de Utilidade Clínica}
+
+A utilidade foi avaliada através de uma abordagem orientada à tarefa (\textit{task-based}). O modelo ConCare foi treinado separadamente em cada uma das versões anonimizadas do dataset (Scenarios A, B, C) e nos dados originais (Baseline), utilizando-se a mesma divisão de treinamento/validação/teste.
+
+% TODO: expandir explicação e justificativa para as métricas de avaliação usando literatura e dados reais
+
+Para medir o desempenho preditivo, foram utilizadas as seguintes métricas:
+
+\begin{itemize}
+    \item \textbf{AUROC (Area Under the Receiver Operating Characteristic Curve):} Mede a capacidade global do modelo de discriminar pacientes que evoluíram para óbito daqueles que receberam alta, independente de limiar de decisão. Varia de 0 (pior) a 1 (perfeito).
+    
+    \item \textbf{AUPRC (Area Under the Precision-Recall Curve):} Métrica particularmente rigorosa em contextos de desbalanceamento severo de classes, como é o caso da mortalidade em UTI ($\approx 10.6\%$ na amostra). AUPRC penaliza fortemente falsos positivos, sendo a métrica primária de avaliação.
+\end{itemize}
+
+Para garantir a robustez estatística das comparações, foram calculados \textbf{Intervalos de Confiança de 95\%} (IC 95\%) utilizando o método de \textit{bootstrap} não-paramétrico com 1.000 reamostragens sobre as predições do conjunto de teste. Esse procedimento permite avaliar simultaneamente a magnitude do efeito e a sua incerteza, fornecendo uma visão completa da estabilidade das estimativas.
+
+Os resultados de risco e utilidade foram compilados e visualizados em gráficos de trade-off (Risco $\times$ Utilidade) para identificar o ponto ótimo de equilíbrio, sintetizando a viabilidade técnica e jurídica da anonimização para pesquisa clínica sob a LGPD.
