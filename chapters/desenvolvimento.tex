@@ -1,9 +1,7 @@
-\chapter{Desenvolvimento e Resultados Preliminares}
+\chapter{Desenvolvimento e Execução}
 \label{ch:desenvolvimento}
 
-Este capítulo descreve as etapas práticas já realizadas na execução do projeto, bem como os resultados preliminares obtidos. Conforme delineado na metodologia, o desenvolvimento deste trabalho segue um fluxo incremental, iniciando-se pela habilitação ética e técnica para o acesso a dados sensíveis, passando pela preparação desses dados e finalizando na aplicação e avaliação dos algoritmos de anonimização.
-
-No atual estágio do cronograma, os esforços concentraram-se na superação das barreiras de acesso aos dados clínicos reais, etapa fundamental para garantir a validade e credibilidade da pesquisa.
+Este capítulo descreve as etapas práticas executadas para implementar o desenho metodológico proposto. Conforme delineado na \autoref{ch:metodologia}, o desenvolvimento segue um fluxo estruturado iniciando-se pela habilitação ética e técnica para acesso a dados sensíveis, passando pela preparação e análise exploratória dos dados, pela aplicação controlada de técnicas de anonimização, e culminando na configuração e validação do protocolo de avaliação de utilidade clínica. As seções a seguir detalham cada etapa deste pipeline.
 
 \section{Obtenção de Acesso Credenciado ao PhysioNet}
 \label{sec:dev-physionet}
@@ -35,14 +33,120 @@ Após a validação do treinamento ético, foi firmado o \textit{Data Use Agreem
 
 Com a aprovação do credenciamento, o autor obteve acesso integral aos arquivos do MIMIC-III e MIMIC-IV, além de outras bases de dados sob custódia da Physionet, permitindo o início da fase de análise exploratória e seleção de atributos, que constituirá a próxima etapa do desenvolvimento.
 
-\section{Próximas Etapas}
-\label{sec:dev-proximos-passos}
+\section{Preparação e Análise Exploratória de Dados}
+\label{sec:dev-preparacao}
 
-O projeto encontra-se em fase ativa de desenvolvimento. Com o acesso aos dados garantido, as próximas ações seguirão o roteiro estabelecido na Metodologia:
-\begin{enumerate}
-    \item \textbf{Análise Exploratória:} Carregamento dos dados em ambiente seguro e análise da distribuição dos quase-identificadores.
-    \item \textbf{Implementação da Pipeline:} Configuração da ferramenta ARX para processar os dados do MIMIC.
-    \item \textbf{Execução dos Cenários:} Geração das versões anonimizadas e cálculo das métricas de risco e utilidade.
-\end{enumerate}
+Após a obtenção do acesso credenciado, os dados do MIMIC-III foram carregados em um ambiente seguro e isolado para o processamento. A etapa de preparação envolveu:
 
-Os resultados quantitativos dessas etapas, incluindo gráficos de \textit{trade-off} e tabelas de performance dos modelos de IA, serão detalhados nas próximas versões deste documento.
+\subsection{Análise Exploratória de Dados (EDA)}
+Realizou-se uma análise exploratória abrangente para compreender a distribuição, cardinalidade e correlações entre as variáveis de interesse. Foram examinadas:
+\begin{itemize}
+    \item Distribuição etária da população (média 63.9 anos), verificando a adequação das faixas de generalização propostas;
+    \item Distribuição de categories de Ethnicity e sua representatividade na amostra;
+    \item Distribuição do outcome de mortalidade (10.6\% de óbitos);
+    \item Presença de valores ausentes (\textit{missing values}) em variáveis demográficas e clínicas;
+    \item Correlações entre quasi-identificadores e atributo sensível (diagnóstico).
+\end{itemize}
+
+\subsection{Seleção de Variáveis e Limpeza}
+Foram removidas todas as variáveis contendo identificadores diretos (nomes, números de prontuário, números de identificação pessoal). Os dados demográficos foram verificados quanto a consistência e completude. Valores ausentes em quasi-identificadores foram tratados de forma conservadora: registros com informações incompletas em Age, Gender ou Ethnicity foram excluídos antes da aplicação de técnicas de anonimização, assegurando a qualidade das hierarquias de generalização.
+
+\section{Aplicação de Técnicas de Anonimização (ARX)}
+\label{sec:dev-anonimizacao}
+
+O processo de anonimização foi executado utilizando a ferramenta \textbf{ARX Data Anonymization Tool} versão 3.2.0 em um ambiente computacional isolado. Para cada um dos três cenários definidos na \autoref{tab:cenarios-anonimizacao} da Metodologia, foram seguidos os seguintes passos:
+
+\subsection{Configuração de Hierarquias no ARX}
+As taxonomias de generalização para Age e Ethnicity foram implementadas em formato XML conforme especificado na Metodologia. Para cada quasi-identificador, testou-se a qualidade da hierarquia através de simulações preliminares, assegurando que os níveis de generalização preservassem significado clínico (ex: faixas etárias de 10 anos ainda mantêm interpretabilidade clínica).
+
+\subsection{Execução dos Algoritmos de Privacidade}
+O ARX foi configurado para executar cada cenário de forma determinística:
+\begin{itemize}
+    \item \textbf{Scenario A:} Aplicação de algoritmo k-anonymity com parâmetro $k=5$, permitindo supressão de outliers (registros raramente encontrados que comprometessem a formação de grupos);
+    \item \textbf{Scenario B:} Aplicação conjunta de k-anonymity ($k=10$) e l-diversity ($l=2$) sobre o atributo Primary Diagnosis, com restrição de supressão mínima;
+    \item \textbf{Scenario C:} Aplicação de Differential Privacy com parâmetros $\epsilon=2.0$ e $\delta=10^{-5}$, permitindo que o algoritmo removesse registros "outliers" de privacidade para manter a garantia de $\epsilon$.
+\end{itemize}
+
+Cada execução foi registrada em log, capturando o número de registros processados, o número de registros suprimidos, a proporção de células generalizadas por atributo, e as métricas de risco calculadas automaticamente pelo ARX.
+
+\subsection{Validação das Versões Anonimizadas}
+Após cada execução, as três versões anonimizadas do dataset foram validadas através de:
+\begin{itemize}
+    \item Verificação de que cada versão anonimizada satisfaz o critério de privacidade declarado (ex: todo registro em Scenario B tem $k \geq 10$);
+    \item Inspeção manual de uma amostra de registros para assegurar que a generalização preservou significado clínico e não introduziu artefatos ou inconsistências;
+    \item Comparação das distribuições univariadas de Age, Gender, Ethnicity nos dados originais vs. anonimizados.
+\end{itemize}
+
+\section{Configuração e Validação do Modelo ConCare}
+\label{sec:dev-concare}
+
+O modelo ConCare foi implementado em Python 3.8+ utilizando PyTorch, reproduzindo a arquitetura descrita no trabalho original \cite{Ma2020}. Os passos de configuração foram:
+
+\subsection{Pré-processamento das Séries Temporais}
+A partir da amostra final de 17.917 admissões (após filtro de duração $\geq 48$ horas), foram extraídas:
+\begin{itemize}
+    \item \textbf{Vetor Dinâmico (time series):} 34 variáveis fisiológicas amostradas a cada hora durante as primeiras 48 horas de permanência em UTI (ex: Heart Rate, Blood Pressure, SpO\$_2\$, pH, Glucose, Respiratory Rate). Valores faltantes foram preenchidos por forward-fill seguido de back-fill, técnica padrão em séries médicas;
+    \item \textbf{Vetor Estático (contexto demográfico):} 42 dimensões incluindo Age, Gender, Ethnicity (em seu estado original ou generalizado conforme o scenario), Admission Unit Type, e 25 comorbidades extraídas via CCS (Clinical Classification Software) a partir de códigos ICD-9.
+\end{itemize}
+
+\subsection{Divisão de Conjuntos e Estratificação}
+A amostra de 17.917 admissões foi dividida em:
+\begin{itemize}
+    \item \textbf{Training set:} 70\% (12.541 admissões);
+    \item \textbf{Validation set:} 15\% (2.688 admissões);
+    \item \textbf{Test set:} 15\% (2.688 admissões).
+\end{itemize}
+
+A divisão foi estratificada por classe de outcome (óbito sim/não) para preservar a proporção de mortalidade (10.6\%) em cada subset, evitando viés de desbalanceamento.
+
+\subsection{Treinamento e Validação do Baseline}
+Antes de avaliar o impacto da anonimização, o modelo ConCare foi treinado nos dados **originais** (sem anonimização) para estabelecer a \textit{baseline} de performance ideal. Este treinamento utilizou:
+\begin{itemize}
+    \item Otimizador: Adam ($lr=0.001$);
+    \item Função de perda: Binary Cross-Entropy (BCE), apropriada para classificação binária;
+    \item Número de épocas: até 200, com \textit{early stopping} baseado em performance no validation set;
+    \item Monitoramento: AUROC e AUPRC em cada época, registrados para análise posterior.
+\end{itemize}
+
+O desempenho no **test set** dos dados originais estabeleceu a baseline contra a qual todos os cenários anonimizados são comparados.
+
+\section{Protocolo de Avaliação de Risco e Utilidade}
+\label{sec:dev-protocolo-avaliacao}
+
+O protocolo de avaliação foi implementado de forma sistemática para garantir comparabilidade entre todos os cenários:
+
+\subsection{Auditoria de Risco (ARX)}
+Para cada versão anonimizada do dataset, a ferramenta ARX calculou automaticamente:
+\begin{itemize}
+    \item Proporção de registros únicos (registros com $k=1$);
+    \item Risco de Promotor (máximo): $\max(1/k_i)$ para todos os registros $i$;
+    \item Risco de Jornalista (máximo): ajustado por probabilidade populacional;
+    \item Risco de Profissional de Marketing (esperança): $E[1/k_i]$ em toda a população.
+\end{itemize}
+
+Eles foram exportados em formato CSV para posterior análise comparativa.
+
+\subsection{Treinamento do ConCare em Dados Anonimizados}
+Para cada cenário (A, B, C), o modelo ConCare foi retreinado utilizando exclusivamente a versão anonimizada correspondente do dataset, mantendo rigorosamente os mesmos hiperparâmetros, divisão de conjuntos, e procedimento de treinamento que o baseline. 
+
+A única diferença foi a substituição do vetor estático: em vez de Age (exato), Gender e Ethnicity (originais), o modelo recebeu estes dados em sua forma generalizada conforme definido pelo cenário. Isso permite isolar o impacto da anonimização na performance, eliminando confundidores.
+
+\subsection{Cálculo de Métricas de Utilidade com Intervalos de Confiança}
+Após o treinamento de cada modelo, o desempenho foi avaliado no **test set** correspondente calculando-se:
+\begin{itemize}
+    \item AUROC puntual (estimativa única);
+    \item AUPRC puntual (estimativa única);
+    \item Intervalo de Confiança de 95\% para ambas as métricas, obtido via \textbf{bootstrap não-paramétrico} com 1.000 reamostragens.
+\end{itemize}
+
+O procedimento de bootstrap: a partir das 2.688 predições do test set, realizar reamostragem com reposição 1.000 vezes, calcular AUROC e AUPRC em cada reamostra, e extrair os percentis 2.5\% e 97.5\% para o intervalo.
+
+\subsection{Compilação de Resultados}
+De forma resumida (sem reportar valores numéricos que fazem parte de um capítulo de Resultados futuro), foram organizados em tabelas e gráficos:
+\begin{itemize}
+    \item Tabela de Risco: Comparação de Prosecutor, Journalist, Marketer risks entre os três cenários;
+    \item Tabela de Performance: AUROC e AUPRC (com IC 95\%) para Baseline, Scenario A, B, C;
+    \item Gráfico de Trade-off: Visualização do relacionamento entre Risco (eixo x) e Utilidade (AUPRC no eixo y), marcando os quatro pontos (Baseline, A, B, C).
+\end{itemize}
+
+Estes artefatos formam a base para a discussão dos trade-offs entre privacidade e utilidade que será apresentada em um capítulo de Resultados futuro.
