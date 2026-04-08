@@ -1,0 +1,48 @@
+\chapter{Desenvolvimento e Resultados Preliminares}
+\label{ch:desenvolvimento}
+
+Este capítulo descreve as etapas práticas já realizadas na execução do projeto, bem como os resultados preliminares obtidos. Conforme delineado na metodologia, o desenvolvimento deste trabalho segue um fluxo incremental, iniciando-se pela habilitação ética e técnica para o acesso a dados sensíveis, passando pela preparação desses dados e finalizando na aplicação e avaliação dos algoritmos de anonimização.
+
+No atual estágio do cronograma, os esforços concentraram-se na superação das barreiras de acesso aos dados clínicos reais, etapa fundamental para garantir a validade e credibilidade da pesquisa.
+
+\section{Obtenção de Acesso Credenciado ao PhysioNet}
+\label{sec:dev-physionet}
+
+A primeira e mais crítica etapa do desenvolvimento foi a obtenção de acesso às bases de dados restritas da plataforma \textit{PhysioNet}. Diferentemente de conjuntos de dados públicos abertos (open data), bases como o MIMIC-III e MIMIC-IV contêm informações clínicas detalhadas que, embora desidentificadas, exigem um nível de responsabilidade elevado por parte do pesquisador para evitar riscos de reidentificação maliciosa.
+
+O processo de credenciamento (\textit{credentialing process}) foi realizado e concluído com êxito, compreendendo as seguintes etapas obrigatórias:
+
+\subsection{Treinamento em Ética em Pesquisa}
+Para qualificar-se como um usuário autorizado, foi necessário comprovar competência em ética na pesquisa com seres humanos. O autor realizou o curso "Data or Specimens Only Research", oferecido pelo programa CITI (\textit{Collaborative Institutional Training Initiative}).
+
+O treinamento abordou tópicos cruciais que fundamentam a responsabilidade ética deste trabalho, incluindo:
+\begin{itemize}
+    \item Histórico e princípios éticos da pesquisa biomédica (Relatório Belmont).
+    \item Regulações de privacidade e confidencialidade (HIPAA nos EUA, correlacionada à LGPD no Brasil).
+    \item Avaliação de riscos para os participantes da pesquisa.
+\end{itemize}
+
+A conclusão deste curso gerou uma certificação oficial, que foi submetida e validada pela equipe do MIT (\textit{Massachusetts Institute of Technology}).
+
+\subsection{Formalização do Acordo de Uso de Dados}
+Após a validação do treinamento ético, foi firmado o \textit{Data Use Agreement} (DUA). Este é um contrato legalmente vinculante no qual o pesquisador se compromete a:
+\begin{enumerate}
+    \item Não tentar identificar ou contatar nenhum indivíduo presente nos dados.
+    \item Utilizar os dados exclusivamente para fins de pesquisa científica.
+    \item Manter a segurança dos dados, não compartilhando as credenciais de acesso ou os dados brutos com terceiros não autorizados.
+    \item Citar adequadamente a fonte dos dados em quaisquer publicações resultantes.
+\end{enumerate}
+
+Com a aprovação do credenciamento, o autor obteve acesso integral aos arquivos do MIMIC-III e MIMIC-IV, além de outras bases de dados sob custódia da Physionet, permitindo o início da fase de análise exploratória e seleção de atributos, que constituirá a próxima etapa do desenvolvimento.
+
+\section{Próximas Etapas}
+\label{sec:dev-proximos-passos}
+
+O projeto encontra-se em fase ativa de desenvolvimento. Com o acesso aos dados garantido, as próximas ações seguirão o roteiro estabelecido na Metodologia:
+\begin{enumerate}
+    \item \textbf{Análise Exploratória:} Carregamento dos dados em ambiente seguro e análise da distribuição dos quase-identificadores.
+    \item \textbf{Implementação da Pipeline:} Configuração da ferramenta ARX para processar os dados do MIMIC.
+    \item \textbf{Execução dos Cenários:} Geração das versões anonimizadas e cálculo das métricas de risco e utilidade.
+\end{enumerate}
+
+Os resultados quantitativos dessas etapas, incluindo gráficos de \textit{trade-off} e tabelas de performance dos modelos de IA, serão detalhados nas próximas versões deste documento.

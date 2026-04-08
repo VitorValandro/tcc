@@ -1,176 +1,49 @@
-%% intro.tex
-%%
-%% Copyright 2017 Evandro Coan
-%% Copyright 2012-2016 by abnTeX2 group at http://www.abntex.net.br/
-%%
-%% This work may be distributed and/or modified under the
-%% conditions of the LaTeX Project Public License, either version 1.3
-%% of this license or (at your option) any later version.
-%% The latest version of this license is in
-%%   http://www.latex-project.org/lppl.txt
-%% and version 1.3 or later is part of all distributions of LaTeX
-%% version 2005/12/01 or later.
-%%
-%% This work has the LPPL maintenance status `maintained'.
-%% The Current Maintainer of this work is the Evandro Coan.
-%%
-%% The last Maintainer of this work was the abnTeX2 team, led
-%% by Lauro César Araujo. Further information are available on
-%% https://www.abntex.net.br/
-%%
-%% This work consists of a bunch of files. But originally there ware 3 files
-%% which are renamed as follows:
-%% Renamed the `abntex2-modelo-include-comandos` to `chapters/chapter_1.tex`
-%% Renamed the `abntex2-modelo-trabalho-academico.tex` to `chapters/intro.tex`
-%% Renamed the `abntex2-modelo-references.bib` to `aftertext/modelo-ufsc-references.bib`
-%%
-%% This file was originally the main template file, however this main file was
-%% split into several new files, which are respectively drastically changed,
-%% except this files which contains most of the main documentation message.
-%%
+\chapter{Introdução}
+\label{ch:introducao}
 
-% ------------------------------------------------------------------------
-% ------------------------------------------------------------------------
-% abnTeX2: Modelo de Trabalho Academico (tese de doutorado, dissertacao de
-% mestrado e trabalhos monograficos em geral) em conformidade com
-% ABNT NBR 14724:2011: Informacao e documentacao - Trabalhos academicos -
-% Apresentacao
-% ------------------------------------------------------------------------
-% ------------------------------------------------------------------------
+A medicina contemporânea vive uma transformação paradigmática, transicionando de uma prática baseada apenas na experiência clínica para uma medicina de precisão, fundamentada na análise massiva de dados. Para \citeonline{Junior2024}, a decisão de um tratamento ou a confirmação de um diagnóstico são hoje apoiadas por uma vasta gama de resultados de exames clínicos, laboratoriais, imagens e até dados genômicos. A digitalização da saúde escalou a utilidade dessas informações para além do consultório: o processamento de grandes volumes de dados médicos tornou-se essencial para fins estatísticos, epidemiológicos e para o desenvolvimento de políticas públicas mais eficazes \cite{Goncalves2024}.
 
-% The \phantomsection command is needed to create a link to a place in the document that is not a
-% figure, equation, table, section, subsection, chapter, etc.
-% https://tex.stackexchange.com/questions/44088/when-do-i-need-to-invoke-phantomsection
-\phantomsection
+Neste cenário, a Inteligência Artificial (IA) emerge como uma tecnologia disruptiva. Suas aplicações na saúde são vastas, variando desde a aceleração do desenvolvimento de novos fármacos e a viabilização de ensaios clínicos \textit{in silico}, até a redução significativa no tempo de diagnóstico de doenças complexas como o câncer \cite{Junior2024}. Contudo, o sucesso desses modelos de IA depende intrinsecamente da disponibilidade de dados de alta qualidade e fidelidade para seu treinamento.
 
-% https://tex.stackexchange.com/questions/5076/is-it-possible-to-keep-my-translation-together-with-original-text
-\chapter{\lang{Introduction}{Introdução}}
-\phantomsection
+Esse avanço tecnológico impõe um desafio ético e legal sem precedentes. O aumento da responsabilidade dos sistemas de informação, que agora processam volumes crescentes de dados sensíveis, forçou um debate global sobre privacidade. No Brasil, esse debate culminou na entrada em vigor da Lei Geral de Proteção de Dados Pessoais (LGPD – Lei Federal nº 13.709/2018), que busca equilibrar o desenvolvimento tecnológico com a garantia dos direitos fundamentais do cidadão.
 
-A Tabela~\ref{tab:a_table_formatacao_de_texto} mostra  informações do modelo de teses da Biblioteca Universitária da UFSC (BU-UFSC).
+Segundo \citeonline{Dourado2022}, embora a LGPD seja um passo vital para a transparência, regular o uso de dados para IA é como "atingir um alvo em contínuo movimento". Existe uma tensão inerente: instrumentos normativos focam na proteção da privacidade, mas o aumento das restrições de acesso pode implicar na redução da precisão e da eficácia dos sistemas inteligentes, inviabilizando soluções para problemas complexos de saúde.
 
-% What does [t] and [ht] mean?
-% https://tex.stackexchange.com/questions/8652/what-does-t-and-ht-mean
-%
-% How can I get rid of the LaTeX warning: Float too large for page?
-% https://tex.stackexchange.com/questions/36252/how-can-i-get-rid-of-the-latex-warning-float-too-large-for-page
-%
-% "warning: Text page X contains only floats" How to suppress this warning?
-% https://tex.stackexchange.com/questions/223149/warning-text-page-x-contains-only-floats-how-to-suppress-this-warning
-%
-% Make a table span multiple pages
-% https://tex.stackexchange.com/questions/26462/make-a-table-span-multiple-pages
-%
-% How to make the longtable to work with centering & caption on memoir class?
-% https://tex.stackexchange.com/questions/386541/how-to-make-the-longtable-to-work-with-centering-caption-on-memoir-class
-%
-% How to fix this Package array Error: Only one column-spec allowed?
-% https://tex.stackexchange.com/questions/367069/how-to-fix-this-package-array-error-only-one-column-spec-allowed
-%
-% How to auto adjust my last table column width, and why is there Underfull \vbox badness on this table?
-% https://tex.stackexchange.com/questions/387238/how-to-auto-adjust-my-last-table-column-width-and-why-is-there-underfull-vbox/387251
-\setlength\extrarowheight{2pt}
-\begin{tabularx}{\linewidth}{>{\RaggedRight}p{3cm}|>{\arraybackslash}X}
+Para superar esse impasse, a anonimização de dados apresenta-se como a solução técnica e jurídica mais promissora. A anonimização envolve a alteração ou supressão de dados em um conjunto, reduzindo drasticamente a possibilidade de reidentificação dos indivíduos \cite{Sousa2020}. Pela ótica da LGPD, dados efetivamente anonimizados não são considerados dados pessoais, o que flexibiliza seu uso para pesquisa e inovação.
 
-\caption[Formatação do texto]{Formatação do texto \showfont}
-\label{tab:a_table_formatacao_de_texto} \\
-\hline
-\endfirsthead
+Este trabalho se insere neste contexto, buscando demonstrar que é possível conciliar o processamento de dados médicos para treinamento de IA com a rigorosa proteção exigida pela lei, garantindo que a informatização da saúde não entre em conflito com as garantias fundamentais do cidadão.
 
-% How to set font size of footnotes correctly in memoir?
-% https://tex.stackexchange.com/questions/213927/how-to-set-font-size-of-footnotes-correctly-in-memoir
-\multicolumn{2}{p{\dimexpr\textwidth-2\tabcolsep\relax}}{\ufsccaptionsize\tablename~\thetable:
-Formatação do texto (continuação) \showfont} \\
-\hline
-\endhead
+\section{Objetivos}
+\label{sec:intro-objetivos}
 
-% Set multicolumn width to default table width
-% https://tex.stackexchange.com/questions/99326/set-multicolumn-width-to-default-table-width
-\hline
-\multicolumn{2}{p{\dimexpr\textwidth-2\tabcolsep\relax}}{\footnotesize continua na próxima página\protect\englishword{\showfont}}
-\endfoot
+\subsection{Objetivo Geral}
+Propor e validar experimentalmente um fluxo de anonimização de dados clínicos que assegure a conformidade com a Lei Geral de Proteção de Dados Pessoais (LGPD), garantindo a privacidade dos titulares ao mesmo tempo em que preserva a utilidade estatística e preditiva dos dados para o treinamento de modelos de Aprendizado de Máquina.
 
-\hline
-\multicolumn{2}{p{\dimexpr\textwidth-2\tabcolsep\relax}}{\fonte{O autor -- \showfont} }
-\endlastfoot
-    Cor                          & Branco - \englishword{\showfont}                                 \\ \hline
-    Formato do papel             & A4                                                               \\ \hline
-    Gramatura                    & 75                                                               \\ \hline
-    Impressão                    & Frente e verso                                                   \\ \hline
-    Margens                      & Direita e superior 3, Inferior e esquerda: 2.                    \\ \hline
-    Cabeçalho                    & 0,7                                                              \\ \hline
-    Rodapé                       & 0,7                                                              \\ \hline
-    Paginação                    & Externa                                                          \\ \hline
-    Alinhamento vertical         & Superior                                                         \\ \hline
-    Alinhamento do texto         & Justificado                                                      \\ \hline
-    Fonte sugerida               & Times New Roman                                                  \\ \hline
-    Tamanho da fonte             & 12 para o texto incluindo os títulos das seções e subseções.
-                                   As citações com mais de três linhas as legendas das ilustrações
-                                   e tabelas, fonte 10.                                             \\ \hline
-    Espaçamento entre linhas     & Um e meio (1,5)                                                  \\ \hline
-    Espaçamento entre parágrafos & Anterior 0,0; Posterior 0,0                                      \\ \hline
-    Numeração da seção           & As seções  primárias devem  começar  sempre em páginas ímpares.
-                                   Deixar um espaço (simples) entre o título da seção e o texto e
-                                   entre o texto e o título da subseção.                            \\ \hline
+\subsection{Objetivos Específicos}
+Para alcançar o objetivo geral, foram definidos os seguintes objetivos específicos:
 
-\end{tabularx}
+\begin{itemize}
+    \item Realizar o levantamento do estado da arte sobre técnicas de privacidade de dados, categorizando métodos de desidentificação, k-anonimato e privacidade diferencial aplicáveis a dados de saúde.
+    \item Selecionar e preparar uma base de dados clínicos reais e complexos (via plataforma \textit{PhysioNet}) que contenha identificadores e atributos sensíveis adequados para o teste de algoritmos de privacidade.
+    \item Aplicar e comparar diferentes hierarquias de generalização e parâmetros de anonimização utilizando ferramentas especializadas, gerando múltiplos cenários de proteção.
+    \item Quantificar o risco de reidentificação residual dos dados tratados, utilizando métricas de risco de promotor, jornalista e profissional de marketing.
+    \item Avaliar a utilidade dos dados anonimizados através de uma abordagem baseada em tarefa (\textit{task-based}), comparando a performance de modelos de Inteligência Artificial treinados com dados originais versus dados anonimizados.
+\end{itemize}
 
+\section{Justificativa}
+\label{sec:intro-justificativa}
 
-\begin{figure}
-    \caption{Exemplo de figura}
-    \label{fig:ex01}
-    \centering
-    \includegraphics[width=\linewidth]{pictures/ex01}
-\fonte{o autor -- \showfont}
-\end{figure}
+A justificativa para este trabalho reside na necessidade urgente de viabilizar a pesquisa científica no Brasil sob a égide da LGPD. Hospitais e centros de pesquisa possuem vastos repositórios de dados que, atualmente, são subutilizados devido ao medo de infrações legais e riscos reputacionais associados ao vazamento de dados.
 
+Demonstrar um método claro e validado para anonimizar esses dados — provando quantitativamente que o risco de reidentificação é baixo e que a utilidade para IA é mantida — fornece segurança jurídica e técnica para que gestores de saúde abram seus dados para a inovação. Além disso, ao focar na manutenção da utilidade para \textit{Machine Learning}, o trabalho ataca um problema técnico específico: muitas técnicas de anonimização destroem as correlações sutis que os algoritmos precisam aprender, tornando os dados inúteis. Encontrar o ponto de equilíbrio ideal é, portanto, uma contribuição relevante tanto para a ciência da computação quanto para a informática em saúde.
 
-Por exemplo, na \figref{fig:ex01}, tem-se...
+\section{Estrutura do Trabalho}
+\label{sec:intro-estrutura}
 
-\begin{figure}
-    \caption{Exemplo de aquisição}
-    \label{fig:tek0009}
-    \centering
-    \includegraphics[width=0.9\linewidth]{pictures/tek0009}
-    \fonte{o autor -- \showfont}
-\end{figure}
-
-Este documento e seu código-fonte são exemplos de referência de uso da classe
-\textsf{abntex2} e do pacote \textsf{abntex2cite}. O documento
-exemplifica a elaboração de trabalho acadêmico (tese, dissertação e outros do
-gênero) produzido conforme a ABNT NBR 14724:2011 \emph{Informação e documentação
-- Trabalhos acadêmicos - Apresentação}.
-
-A expressão ``Modelo Canônico'' é utilizada para indicar que \abnTeX{} não é
-modelo específico de nenhuma universidade ou instituição, mas que implementa tão
-somente os requisitos das normas da ABNT. Uma lista completa das normas
-observadas pelo \abnTeX{} é apresentada em \textcite{abntex2classe}.
-
-Sinta-se convidado a participar do projeto \abnTeX{}! Acesse o site do projeto em
-\url{http://abntex2.googlecode.com/}. Também fique livre para conhecer,
-estudar, alterar e redistribuir o trabalho do \abnTeX{}, desde que os arquivos
-modificados tenham seus nomes alterados e que os créditos sejam dados aos
-autores originais, nos termos da ``The \LaTeX{} Project Public
-License''\footnote{\url{http://www.latex-project.org/lppl.txt}}.
-
-Encorajamos que sejam realizadas customizações específicas deste exemplo para
-universidades e outras instituições --- como capas, folha de aprovação, etc.
-Porém, recomendamos que ao invés de se alterar diretamente os arquivos do
-\abnTeX{}, distribua-se arquivos com as respectivas customizações.
-Isso permite que futuras versões do \abnTeX{}~não se tornem automaticamente
-incompatíveis com as customizações promovidas. Consulte
-\textcite{abntex2-wiki-como-customizar} par mais informações.
-
-Este documento deve ser utilizado como complemento dos manuais do \abnTeX{}
-\cite{abntex2classe,abntex2cite,abntex2cite-alf} e da classe \textsf{memoir}
-\cite{memoir}.
-
-Esperamos, sinceramente, que o \abnTeX{} aprimore a qualidade do trabalho que
-você produzirá, de modo que o principal esforço seja concentrado no principal:
-na contribuição científica.
-
-Equipe \abnTeX{}
-
-Lauro César Araujo
-
-
+Este documento está organizado da seguinte forma:
+\begin{itemize}
+    \item O \textbf{\autoref{ch:fundamentacao-teorica} (Fundamentação Teórica)} estabelece as bases conceituais sobre privacidade, detalha os aspectos da LGPD relevantes para a pesquisa e revisa os algoritmos e métricas de anonimização.
+    \item O \textbf{\autoref{ch:metodologia} (Metodologia)} descreve o delineamento experimental, a seleção da base de dados MIMIC, as ferramentas utilizadas e os critérios para avaliação de risco e utilidade.
+    \item O \textbf{\autoref{ch:desenvolvimento} (Desenvolvimento e Resultados)} apresenta a execução dos experimentos, a análise exploratória dos dados e a discussão sobre a performance dos modelos de IA nos diferentes cenários de privacidade.
+    \item O \textbf{\autoref{ch:conclusao} (Conclusão)} sintetiza os achados, discute as limitações do estudo e aponta direções para trabalhos futuros.
+\end{itemize}

@@ -70,10 +70,10 @@
     % com a ficha catalográfica definitiva após a defesa do trabalho. Quando estiver
     % com o documento, salve-o como PDF no diretório do seu projeto e substitua todo
     % o conteúdo de implementação deste arquivo pelo comando abaixo:
-    \PRIVATEbookmarkthis{Ficha Catalográfica}
-    \addtotextpreliminarycontent{Ficha Catalográfica}
+    % \PRIVATEbookmarkthis{Ficha Catalográfica}
+    % \addtotextpreliminarycontent{Ficha Catalográfica}
 
-    \include{beforetext/fichacatalografica}
+    % \include{beforetext/fichacatalografica}
     % https://tex.stackexchange.com/questions/91440/how-to-include-multiple-pages-in-latex
     % \includepdf{pictures/Ficha_Catalografica.pdf}
     \ifforcedinclude\else\cleardoublepage\fi
@@ -87,29 +87,29 @@
 % Após isso, substitua todo o conteúdo deste arquivo por uma imagem da página assinada pela
 % banca com o comando abaixo:
 \ifforcedinclude\else\cleardoublepage\fi
-\include{beforetext/folhadeaprovacao}
+% \include{beforetext/folhadeaprovacao}
 % \includepdf{pictures/folhadeaprovacao_final.pdf}
 
 
 % Dedicatória
-\ifforcedinclude\else\cleardoublepage\fi
-\ifforcedinclude\else\input{beforetext/dedicatoria.tex}\fi
+% \ifforcedinclude\else\cleardoublepage\fi
+% \ifforcedinclude\else\input{beforetext/dedicatoria.tex}\fi
 
 % Agradecimentos
-\ifforcedinclude\else\cleardoublepage\fi
-\include{beforetext/agradecimentos}
+% \ifforcedinclude\else\cleardoublepage\fi
+% \include{beforetext/agradecimentos}
 
-% Epígrafe
-\ifforcedinclude\else\cleardoublepage\fi
-\include{beforetext/epigrafe}
+% % Epígrafe
+% \ifforcedinclude\else\cleardoublepage\fi
+% \include{beforetext/epigrafe}
 
 
 % Ajusta o espaçamento dos parágrafos do resumo
 \setlength{\absparsep}{18pt}
 
-% RESUMOS
-\ifforcedinclude\else\cleardoublepage\fi
-\include{beforetext/resumos}
+% % RESUMOS
+% \ifforcedinclude\else\cleardoublepage\fi
+% \include{beforetext/resumos}
 
 % Some tables of contents
 \ifforcedinclude\else
@@ -147,27 +147,27 @@
         \listoftables*}
     }{\pdfbookmark[0]{\listtablename}{lot}}
 
-    % inserir códigos fonte (List of Listings `lol`)
-    % https://tex.stackexchange.com/questions/511519/latex-keeps-showing-minted-environment-as-figures-instead-of-listening/511579#511579
-    \ifforcedinclude\else\cleardoublepage\fi
-    % https://tex.stackexchange.com/questions/234398/list-of-figures-and-tables-when-there-are-no-figures-or-tables
-    \whenlistisnotempty{\lstlistlistingname}{%
-        \addtotextpreliminarycontent{\lstlistlistingname}
-        % https://tex.stackexchange.com/questions/121879/remove-spacing-between-per-chapter-figures-in-lof
-        {\renewcommand{\addvspace}[1]{}
-        \lstlistoflistings*}
-    }{\pdfbookmark[0]{\lstlistlistingname}{lol}}
+    % % inserir códigos fonte (List of Listings `lol`)
+    % % https://tex.stackexchange.com/questions/511519/latex-keeps-showing-minted-environment-as-figures-instead-of-listening/511579#511579
+    % \ifforcedinclude\else\cleardoublepage\fi
+    % % https://tex.stackexchange.com/questions/234398/list-of-figures-and-tables-when-there-are-no-figures-or-tables
+    % \whenlistisnotempty{\lstlistlistingname}{%
+    %     \addtotextpreliminarycontent{\lstlistlistingname}
+    %     % https://tex.stackexchange.com/questions/121879/remove-spacing-between-per-chapter-figures-in-lof
+    %     {\renewcommand{\addvspace}[1]{}
+    %     \lstlistoflistings*}
+    % }{\pdfbookmark[0]{\lstlistlistingname}{lol}}
 }
 \fi
 
 
-% inserir lista de abreviaturas e siglas
-\ifforcedinclude\else\cleardoublepage\fi
-\include{beforetext/siglas}
+% % inserir lista de abreviaturas e siglas
+% \ifforcedinclude\else\cleardoublepage\fi
+% \include{beforetext/siglas}
 
-% Inserir lista de símbolos
-\ifforcedinclude\else\cleardoublepage\fi
-\include{beforetext/simbolos}
+% % Inserir lista de símbolos
+% \ifforcedinclude\else\cleardoublepage\fi
+% \include{beforetext/simbolos}
 
 % How to remove the self-reference of the ToC from the ToC?
 % https://tex.stackexchange.com/questions/10943/how-to-remove-the-self-reference-of-the-toc-from-the-toc
