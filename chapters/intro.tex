@@ -9,7 +9,7 @@ Esse avanço tecnológico impõe um desafio ético e legal sem precedentes. O au
 
 Segundo \citeonline{Dourado2022}, embora a LGPD seja um passo vital para a transparência, regular o uso de dados para IA é como "atingir um alvo em contínuo movimento". Existe uma tensão inerente: instrumentos normativos focam na proteção da privacidade, mas o aumento das restrições de acesso pode implicar na redução da precisão e da eficácia dos sistemas inteligentes, inviabilizando soluções para problemas complexos de saúde.
 
-Para superar esse impasse, a anonimização de dados apresenta-se como a solução técnica e jurídica mais promissora. A anonimização envolve a alteração ou supressão de dados em um conjunto, reduzindo drasticamente a possibilidade de reidentificação dos indivíduos \cite{Sousa2020}. Pela ótica da LGPD, dados efetivamente anonimizados não são considerados dados pessoais, o que flexibiliza seu uso para pesquisa e inovação.
+Para superar esse impasse, a proteção de privacidade através de técnicas de pseudonimização robusta apresenta-se como a solução técnica e jurídica mais promissora. A pseudonimização envolve a alteração ou supressão de dados em um conjunto (mediante generalização, supressão e técnicas como k-anonimato), reduzindo drasticamente a possibilidade de reidentificação dos indivíduos \cite{Sousa2020}. Ainda que não alcance a irreversibilidade absoluta da anonimização verdadeira, a pseudonimização robusta oferece garantias estatísticas adequadas. Pela ótica da LGPD, dados protegidos por pseudonimização robusta---quando aliada a controles técnicos e organizacionais---abrem o caminho jurídico para o uso em pesquisa e inovação.
 
 Este trabalho se insere neste contexto, buscando responder à seguinte pergunta de pesquisa central: \textbf{A anonimização pode viabilizar o uso legal de dados sensíveis sob a LGPD, preservando a utilidade clínica de modelos de Deep Learning em Unidades de Terapia Intensiva?} Para tanto, realiza-se uma avaliação orientada à tarefa, testando empiricamente a preservação de utilidade preditiva quando dados clínicos reais são submetidos a diferentes níveis de proteção de privacidade, desde anonimização sintática até técnicas probabilísticas. Desta forma, demonstra-se que é possível conciliar o processamento de dados médicos para treinamento de IA com a rigorosa proteção exigida pela lei, garantindo que a informatização da saúde não entre em conflito com as garantias fundamentais do cidadão.
 
@@ -17,17 +17,17 @@ Este trabalho se insere neste contexto, buscando responder à seguinte pergunta 
 \label{sec:intro-objetivos}
 
 \subsection{Objetivo Geral}
-Avaliar experimentalmente o equilíbrio entre a proteção da privacidade e a preservação da utilidade clínica em modelos de \textit{Deep Learning}, demonstrando que a anonimização robusta de dados clínicos viabiliza seu uso em pesquisa sob conformidade com a Lei Geral de Proteção de Dados Pessoais (LGPD).
+Avaliação experimental do equilíbrio entre a proteção da privacidade e a preservação da utilidade clínica em modelos de \textit{Deep Learning}, demonstrando que a pseudonimização robusta de dados clínicos viabiliza seu uso em pesquisa sob conformidade com a Lei Geral de Proteção de Dados Pessoais (LGPD).
 
 \subsection{Objetivos Específicos}
 Para alcançar o objetivo geral, foram definidos os seguintes objetivos específicos:
 
 \begin{itemize}
-    \item Estabelecer o estado da arte sobre técnicas de privacidade de dados clínicos, comparando k-anonimato (sintático), l-diversidade (semântico) e Privacidade Diferencial (probabilístico) em termos de garantias de proteção e vulnerabilidades conhecidas.
+    \item Estabelecer o estado da arte sobre técnicas de privacidade de dados clínicos, comparando k-anonimato \cite{Sweeney2002} (sintático), l-diversidade \cite{Machanavajjhala2007} (semântico) e Privacidade Diferencial \cite{Dwork2006} (probabilístico) em termos de garantias de proteção e vulnerabilidades conhecidas.
     \item Selecionar, preparar e caracterizar uma amostra real de 42.277 admissões em Unidades de Terapia Intensiva a partir do banco de dados MIMIC-III, identificando quasi-identificadores, atributos sensíveis e definindo hierarquias de generalização apropriadas.
-    \item Aplicar e comparar três cenários de anonimização progressiva (Cenário A: $k=5$; Cenário B: $k=10, l=2$; Cenário C: Privacidade Diferencial $\epsilon=2.0$) e quantificar o risco de reidentificação residual utilizando modelos de ameaça (Promotor, Jornalista, Profissional de Marketing).
+    \item Aplicar e comparar três cenários de pseudonimização progressiva (Cenário A: $k=5$; Cenário B: $k=10, l=2$; Cenário C: Privacidade Diferencial $\epsilon=2.0$) e quantificar o risco de reidentificação residual utilizando modelos de ameaça (Promotor, Jornalista, Profissional de Marketing).
     \item Conduzir uma avaliação orientada à tarefa, utilizando o modelo ConCare para predição de mortalidade hospitalar, comparando a performance preditiva (AUROC, AUPRC com intervalos de confiança 95\%) nos dados originais versus anonimizados.
-    \item Sintetizar diretrizes técnicas e jurídicas para a aplicação de anonimização em pesquisa clínica sob a LGPD, estabelecendo o ponto ótimo de equilíbrio entre proteção de privacidade e utilidade clínica.
+    \item Sintetizar diretrizes técnicas e jurídicas para a aplicação de pseudonimização robusta em pesquisa clínica sob a LGPD, estabelecendo o ponto ótimo de equilíbrio entre proteção de privacidade e utilidade clínica.
 \end{itemize}
 
 \section{Justificativa}
@@ -42,8 +42,8 @@ Demonstrar um método claro e validado para anonimizar esses dados — provando 
 
 Este documento está organizado da seguinte forma:
 \begin{itemize}
-    \item O \textbf{\autoref{ch:fundamentacao-teorica} (Fundamentação Teórica)} estabelece as bases conceituais sobre privacidade, detalha os aspectos da LGPD relevantes para a pesquisa, revisa os principais algoritmos de anonimização e as métricas utilizadas para avaliar o equilíbrio entre privacidade e utilidade.
-    \item O \textbf{\autoref{ch:metodologia} (Metodologia)} delineia o desenho experimental, caracteriza a amostra selecionada do MIMIC-III, define os quasi-identificadores e atributos sensíveis, especifica os três cenários de privacidade testados e estabelece os protocolos para avaliação de risco e utilidade clínica.
-    \item O \textbf{\autoref{ch:desenvolvimento} (Desenvolvimento)} apresenta a execução do pipeline metodológico, incluindo a preparação dos dados, a aplicação de técnicas de anonimização através da ferramenta ARX, a configuração e validação do modelo ConCare, e o protocolo de avaliação utilizado.
+    \item O \textbf{\autoref{ch:fundamentacao-teorica} (Fundamentação Teórica)} estabelece as bases conceituais sobre privacidade, detalha os aspectos da LGPD relevantes para a pesquisa, revisa os principais algoritmos de pseudonimização e as métricas utilizadas para avaliar o equilíbrio entre privacidade e utilidade.
+    \item O \textbf{\autoref{ch:metodologia} (Metodologia)} delineia o desenho experimental, caracteriza a amostra selecionada do MIMIC-III, define os quasi-identificadores e atributos sensíveis, especifica os três cenários de pseudonimização testados e estabelece os protocolos para avaliação de risco e utilidade clínica.
+    \item O \textbf{\autoref{ch:desenvolvimento} (Desenvolvimento)} apresenta a execução do pipeline metodológico, incluindo a preparação dos dados, a aplicação de técnicas de pseudonimização através da ferramenta ARX, a configuração e validação do modelo ConCare, e o protocolo de avaliação utilizado.
     \item O \textbf{\autoref{ch:conclusao} (Conclusão)} sintetiza os achados e contribuições do trabalho, discute as limitações do desenho experimental e aponta direções para trabalhos futuros no contexto da pesquisa clínica sob conformidade com a LGPD.
 \end{itemize}
