@@ -1,0 +1,179 @@
+\chapter{Resultados e Discussão}
+\label{ch:resultados}
+
+Este capítulo apresenta os resultados experimentais obtidos a partir da execução do pipeline metodológico descrito no \autoref{ch:metodologia} e detalhado no \autoref{ch:desenvolvimento}. A avaliação foi conduzida em duas dimensões complementares e integradas: (1) auditoria do risco residual de reidentificação após a aplicação das técnicas de pseudonimização, mensurada pela ferramenta ARX sob três modelos de ameaça distintos; e (2) avaliação da utilidade clínica preservada nos dados pseudonimizados, mensurada pelo desempenho preditivo de duas arquiteturas de \textit{Deep Learning} na tarefa de predição de mortalidade hospitalar em UTI. Ambas as avaliações foram conduzidas sobre a mesma população ($N = 17.917$), garantindo coerência entre as conclusões sobre risco e sobre utilidade. A apresentação está organizada em sete seções: a auditoria de risco; a avaliação de utilidade dos modelos ConCare e LSTM; a comparação arquitetural entre eles; a análise do controle Blind; a análise de subgrupos por gênero; e, ao final, a síntese do trade-off privacidade-utilidade com suas implicações para a conformidade com a LGPD.
+
+\section{Auditoria de Risco de Reidentificação}
+\label{sec:resultados-risco}
+
+A análise da \textit{Baseline} confirmou a vulnerabilidade dos dados originais: 99,98\% dos registros são únicos quando combinadas as variáveis Age, Gender e Ethnicity, configurando um risco máximo de Promotor de 100\%. Isto é, qualquer adversário que conheça previamente que um determinado paciente integra a coorte conseguirá identificá-lo deterministicamente apenas pelas variáveis quasi-identificadoras. Esta condição inviabiliza, sob a ótica da LGPD, qualquer compartilhamento dos dados em sua forma bruta para finalidades secundárias de pesquisa, mesmo entre instituições parceiras. A \autoref{tab:risco-reid} consolida o impacto dos três cenários de pseudonimização sobre essa condição.
+
+\begin{table}[ht]
+\centering
+\caption{Risco de Reidentificação Residual por Cenário ($N = 17.917$)}
+\label{tab:risco-reid}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l|c|c|c|c|c}
+\hline
+\textbf{Cenário} & \textbf{Promotor} & \textbf{Jornalista} & \textbf{Marketer} & \textbf{N final} & \textbf{Perda} \\
+ & \textit{(máximo)} & \textit{(máximo)} & \textit{(sucesso)} & & \textbf{(\%)} \\ \hline
+Baseline & 100\% & 100\% & 99,99\% & 17.917 & 0\% \\
+Cenário A ($k=5$) & 3,57\% & 3,57\% & 0,10\% & 17.915 & $\approx 0\%$ \\
+Cenário B ($k=10$, $l=2$) & 1,37\% & 1,37\% & 0,04\% & 17.915 & $\approx 0\%$ \\
+Cenário C (DP $\epsilon=2{,}0$) & 1,05\% & 0,85\% & 0,20\% & 12.339 & 31,1\% \\ \hline
+\end{tabular}
+\end{table}
+
+Os três cenários alcançaram redução substancial do risco residual, levando a probabilidade máxima de reidentificação de 100\% para níveis abaixo de 4\% em todas as configurações testadas. O Cenário A, configuração sintática de proteção leve, reduziu o risco de Promotor a 3,57\% --- valor que corresponde à reidentificação correta de aproximadamente 1 a cada 28 registros sob o modelo de ataque mais permissivo, com supressão desprezível (apenas 2 registros eliminados como \textit{outliers}). O Cenário B, mediante a combinação de $k=10$ com $l$-diversidade ($l=2$) sobre o atributo \textit{Diagnosis}, reduziu o risco a 1,37\%, tornando estatisticamente improvável tanto a reidentificação direcionada quanto a inferência sobre o atributo sensível, preservando integralmente o volume amostral.
+
+O Cenário C, baseado em Privacidade Diferencial, atingiu o menor risco de Promotor (1,05\%), mas a um custo amostral expressivo: 31,1\% dos registros foram suprimidos pelo algoritmo para satisfazer o orçamento de privacidade $\epsilon = 2{,}0$ enquanto preserva a granularidade original da variável Ethnicity. Este custo é esperado dada a natureza probabilística do mecanismo: para satisfazer a definição formal de Privacidade Diferencial \cite{Dwork2006}, o algoritmo precisa eliminar registros cuja presença ou ausência altere significativamente a saída agregada, e essa eliminação tende a ser proporcionalmente maior em populações com grupos demográficos pouco representados. \citeonline{Pilgram2024}, em estudo de caso sobre o custo da anonimização em dados clínicos, documentam exatamente este padrão: técnicas com garantia matemática rigorosa frequentemente impõem perdas substanciais de registros como custo intrínseco da proteção oferecida.
+
+A divergência entre as métricas de Promotor (1,05\%) e Jornalista (0,85\%) no Cenário C reflete o ajuste populacional do segundo modelo: como o adversário Jornalista não tem certeza prévia da presença do alvo na amostra, sua taxa de sucesso máxima é ponderada pela probabilidade de amostragem. Já a métrica de Marketer (0,20\%), que mensura a fração esperada de reidentificações em ataques não direcionados, permanece em ordem de grandeza compatível com diretrizes operacionais de baixa exposição estabelecidas para dados de saúde \cite{ElEmam2013}.
+
+\section{Avaliação de Utilidade Clínica}
+\label{sec:resultados-utilidade}
+
+A utilidade dos dados pseudonimizados foi mensurada por meio do desempenho preditivo de dois modelos de \textit{Deep Learning} na tarefa de predição de mortalidade hospitalar (\textit{In-Hospital Mortality}). Para cada cenário (Baseline, A, B, C) e para um controle adicional (\textit{Blind}, no qual o vetor estático demográfico foi zerado durante o treinamento), os modelos foram treinados independentemente, mantendo idêntica divisão de conjuntos, hiperparâmetros e procedimento de \textit{early stopping}. O desempenho foi avaliado no conjunto de teste ($N = 2.973$ admissões) por AUROC e AUPRC, com intervalos de confiança de 95\% calculados via \textit{bootstrap} não-paramétrico (1.000 reamostragens).
+
+\subsection{Modelo ConCare}
+\label{sec:resultados-concare}
+
+A \autoref{tab:utilidade-concare} apresenta o desempenho do modelo ConCare em cada cenário. O modelo integra o vetor estático demográfico como \textit{query} em um mecanismo de atenção multi-cabeça sobre as séries temporais fisiológicas, condição que, a princípio, torna a degradação esperada por anonimização mais pronunciada do que em arquiteturas que apenas concatenam o vetor estático ao final do processamento. O AUROC obtido no Baseline (0,856) é compatível com o reportado pelos autores originais do ConCare na mesma tarefa de mortalidade hospitalar do MIMIC-III, que registraram AUROC de 0,8702 e AUPRC de 0,5317 sob protocolo experimental similar \cite{Ma2020}, indicando que a implementação utilizada neste estudo reproduz fielmente o comportamento de referência da arquitetura.
+
+\begin{table}[ht]
+\centering
+\caption{Desempenho Preditivo do Modelo ConCare (IC 95\%)}
+\label{tab:utilidade-concare}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{l|c|c|c}
+\hline
+\textbf{Cenário de Treinamento} & \textbf{AUROC (IC 95\%)} & \textbf{AUPRC (IC 95\%)} & \textbf{$\Delta$ AUROC} \\ \hline
+Baseline (Original)             & 0,856 (0,838--0,871) & 0,409 (0,362--0,461) & --     \\ \hline
+Cenário B ($k=10$, $l=2$)       & 0,851 (0,833--0,868) & 0,417 (0,369--0,470) & -0,005 \\
+Cenário C (DP $\epsilon=2{,}0$) & 0,838 (0,819--0,855) & 0,391 (0,346--0,441) & -0,018 \\
+Cenário A ($k=5$)               & 0,825 (0,806--0,844) & 0,376 (0,333--0,431) & -0,031 \\ \hline
+Controle (Blind)                & 0,807 (0,784--0,828) & 0,373 (0,324--0,429) & -0,049 \\ \hline
+\end{tabular}
+\end{table}
+
+O Cenário B (AUROC 0,851) apresentou a menor degradação entre as configurações pseudonimizadas, com $\Delta$ AUROC de apenas $-0{,}005$ em relação ao Baseline. Este resultado é estatisticamente compatível com o desempenho original (intervalos de confiança sobrepostos), indicando que o modelo manteve plena capacidade discriminativa mesmo sob restrições simultâneas de $k$-anonimato e $l$-diversidade. O AUPRC do Cenário B (0,417) é inclusive marginalmente superior ao Baseline (0,409), embora a diferença não seja estatisticamente significativa. Uma hipótese para este comportamento é que a restrição semântica imposta por $l$-diversidade força a heterogeneidade de diagnósticos dentro dos grupos anonimizados, atuando como uma forma indireta de regularização que reduz o risco de \textit{overfitting} a atalhos demográficos espúrios e induz o modelo a priorizar padrões fisiológicos genuínos das séries temporais. Este efeito é consistente com a observação de \citeonline{Fakeeroodeen2021} de que combinações híbridas envolvendo $l$-diversidade preservam melhor a estrutura informacional dos dados anonimizados do que técnicas isoladas.
+
+O Cenário C (AUROC 0,838) apresentou degradação intermediária, com $\Delta$ AUROC de $-0{,}018$ em relação ao Baseline. Este resultado deve ser interpretado em conjunto com a perda amostral de 31,1\% reportada na \autoref{tab:risco-reid}: aproximadamente 2.884 admissões da coorte de treinamento perderam o vetor estático informativo após a supressão por DP, recebendo durante a inferência um vetor de valores neutros (idade média e marcadores de Ethnicity ``desconhecida''). Esta substituição funciona, em última instância, como uma exposição parcial do modelo ao regime \textit{Blind} para o subconjunto suprimido, puxando a métrica global para baixo. O efeito é coerente com o que se observa em comparações sistemáticas de algoritmos de privacidade em dados de saúde: \citeonline{Fakeeroodeen2021} reportam que Privacidade Diferencial aplicada de forma isolada produz informação loss substancialmente superior ao de combinações sintáticas robustas como $k+l$, fenômeno cuja consequência prática se manifesta como degradação na utilidade dos modelos treinados sobre tais dados.
+
+O Cenário A (AUROC 0,825) apresentou a maior degradação entre as configurações pseudonimizadas ($\Delta$ AUROC $-0{,}031$). Este resultado é contraintuitivo à primeira vista, dado que o Cenário A possui o critério de privacidade mais leve ($k=5$) e preserva a granularidade etária mais fina (faixas de 5 anos). A explicação reside na supressão integral da variável Ethnicity: apesar da maior precisão da idade, a perda completa de informação étnica reduz a dimensionalidade efetiva do vetor estático e remove um marcador clinicamente relevante de heterogeneidade populacional. O Cenário B sofre da mesma supressão de Ethnicity, mas a presença simultânea da restrição $l$-diversidade força uma estrutura de grupos com maior heterogeneidade de diagnósticos, mitigando o impacto da perda demográfica.
+
+Finalmente, o controle Blind (AUROC 0,807, $\Delta$ AUROC $-0{,}049$) estabelece o piso de desempenho atingível pelo modelo quando privado de todo contexto demográfico. A redução substancial em relação ao Baseline confirma que o vetor estático contribui com aproximadamente 5 pontos percentuais de AUROC para a capacidade preditiva do ConCare, quantificando empiricamente o custo de uma estratégia de \textit{compliance} excessivamente conservadora baseada em remoção total de dados demográficos.
+
+\subsection{Modelo LSTM com Fusão Tardia}
+\label{sec:resultados-lstm}
+
+Para avaliar se as conclusões obtidas com o modelo ConCare são específicas a essa arquitetura ou refletem propriedades mais gerais da relação entre pseudonimização e utilidade, foi conduzida uma segunda bateria de experimentos com uma arquitetura LSTM bidirecional com fusão tardia do vetor estático. Diferentemente do ConCare, na LSTM o vetor estático não influencia o processamento das séries temporais; ele é concatenado apenas à representação final da sequência antes da camada de classificação. Esta diferença arquitetural é metodologicamente importante porque reduz \textit{a priori} a sensibilidade do modelo a alterações nas variáveis demográficas, oferecendo um teste de robustez para os achados obtidos com ConCare.
+
+\begin{table}[ht]
+\centering
+\caption{Desempenho Preditivo do Modelo LSTM com Fusão Tardia (IC 95\%)}
+\label{tab:utilidade-lstm}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{l|c|c|c}
+\hline
+\textbf{Cenário de Treinamento} & \textbf{AUROC (IC 95\%)} & \textbf{AUPRC (IC 95\%)} & \textbf{$\Delta$ AUROC} \\ \hline
+Baseline (Original)             & 0,868 (0,852--0,883) & 0,442 (0,390--0,501) & --     \\ \hline
+Cenário B ($k=10$, $l=2$)       & 0,864 (0,847--0,880) & 0,437 (0,389--0,492) & -0,004 \\
+Cenário C (DP $\epsilon=2{,}0$) & 0,859 (0,843--0,878) & 0,437 (0,391--0,492) & -0,009 \\
+Cenário A ($k=5$)               & 0,849 (0,833--0,867) & 0,410 (0,365--0,465) & -0,019 \\ \hline
+Controle (Blind)                & 0,806 (0,783--0,828) & 0,354 (0,308--0,406) & -0,062 \\ \hline
+\end{tabular}
+\end{table}
+
+O modelo LSTM apresentou desempenho global superior ao ConCare em todos os cenários (Baseline 0,868 vs.\ 0,856), mas reproduziu integralmente a hierarquia de utilidade observada com a primeira arquitetura: $\text{Baseline} > B > C > A > \text{Blind}$. O AUROC obtido (0,868) é coerente com os benchmarks consolidados para a tarefa de mortalidade hospitalar no MIMIC-III: \citeonline{Harutyunyan2019} reportam AUROC de 0,854 (IC: 0,840--0,867) para a LSTM padrão, 0,862 para a LSTM \textit{channel-wise} e 0,866 para a LSTM \textit{multitask} sobre o mesmo conjunto de dados, sem incluir atributos demográficos como \textit{features}. O ganho marginal observado em nossa implementação (0,868) é, portanto, consistente com a diferença esperada pela inclusão do vetor estático que agrega dados demográficos (idade, gênero e etnia), tipo de unidade de internação e marcadores fenotípicos derivados de códigos ICD-9. A convergência de ordenação entre arquiteturas distintas é uma evidência relevante de que os achados não são artefatos de uma escolha específica de modelo, mas reflexos da relação entre as técnicas de pseudonimização aplicadas e a informação clínica disponível para o aprendizado.
+
+A magnitude da degradação, contudo, é menor para o LSTM em todos os cenários protegidos. Para o Cenário B, $\Delta$ AUROC é de apenas $-0{,}004$ (vs.\ $-0{,}005$ no ConCare); para o Cenário C, $-0{,}009$ (vs.\ $-0{,}018$); e para o Cenário A, $-0{,}019$ (vs.\ $-0{,}031$). Esta atenuação é coerente com a diferença arquitetural: ao concatenar o vetor estático apenas no final, a LSTM depende menos integralmente da qualidade demográfica para a representação interna da sequência, e portanto absorve melhor a degradação introduzida pela generalização ou supressão das variáveis quasi-identificadoras. O ConCare, por outro lado, integra os dados estáticos como \textit{query} de atenção sobre toda a série temporal, condição que amplifica o efeito da anonimização sobre os pesos aprendidos.
+
+O controle Blind, por sua vez, apresenta degradação ligeiramente maior no LSTM ($-0{,}062$ vs.\ $-0{,}049$ no ConCare). Os pisos de desempenho atingidos são, contudo, praticamente idênticos (0,806 vs.\ 0,807), sugerindo que ambas as arquiteturas convergem ao mesmo limite quando privadas do contexto demográfico --- e que a contribuição informacional do vetor estático é uma propriedade da tarefa clínica em si, não da arquitetura empregada.
+
+\subsection{Análise Comparativa entre Arquiteturas}
+\label{sec:resultados-comparacao}
+
+A \autoref{tab:delta-arquiteturas} consolida os deltas absolutos de AUROC entre o Baseline e cada cenário pseudonimizado, evidenciando o padrão de robustez de cada arquitetura.
+
+\begin{table}[ht]
+\centering
+\caption{Degradação Comparativa entre Arquiteturas ($\Delta$ AUROC)}
+\label{tab:delta-arquiteturas}
+\small
+\begin{tabular}{l|c|c|c}
+\hline
+\textbf{Cenário} & \textbf{ConCare} & \textbf{LSTM} & \textbf{Diferença} \\ \hline
+Cenário B ($k=10$, $l=2$)       & -0,005 & -0,004 & 0,001 \\
+Cenário C (DP $\epsilon=2{,}0$) & -0,018 & -0,009 & 0,009 \\
+Cenário A ($k=5$)               & -0,031 & -0,019 & 0,012 \\
+Controle (Blind)                & -0,049 & -0,062 & -0,013 \\ \hline
+\end{tabular}
+\end{table}
+
+Três observações emergem desta comparação. Primeiro, a ordenação de robustez entre cenários é idêntica nas duas arquiteturas, indicando que a escolha da técnica de pseudonimização determina o impacto na utilidade independentemente da arquitetura empregada. Segundo, o ConCare é sistematicamente mais sensível à pseudonimização nos cenários com supressão de Ethnicity (A e C), com degradação aproximadamente o dobro daquela observada no LSTM. Terceiro, no controle Blind a relação se inverte: o LSTM degrada mais ($-0{,}062$ vs.\ $-0{,}049$), indicando que, embora seja mais robusto a anonimização parcial, ele depende mais criticamente da presença de \textit{algum} vetor estático para atingir seu desempenho máximo.
+
+Estas observações têm implicação operacional direta: para arquiteturas que integram intensivamente o contexto demográfico (como ConCare), a escolha da técnica de pseudonimização impacta significativamente a utilidade preservada, recomendando-se preferência por configurações que mantenham heterogeneidade informativa (Cenário B). Para arquiteturas com fusão tardia (como a LSTM avaliada), a sensibilidade é menor e a escolha pode priorizar critérios complementares, como a preservação de Ethnicity para mitigação de viés algorítmico.
+
+\section{Análise do Controle Blind: Quantificação da Contribuição Demográfica}
+\label{sec:resultados-blind}
+
+O cenário de controle Blind merece análise dedicada por sua relevância para o debate jurídico sobre estratégias de \textit{compliance} com a LGPD. Neste cenário, o vetor estático foi inteiramente zerado durante o treinamento, simulando a prática --- frequente em iniciativas conservadoras de proteção de dados --- de remover totalmente os atributos demográficos dos pacientes para evitar qualquer risco de reidentificação.
+
+Os resultados quantificam o custo desta estratégia. No modelo ConCare, o Blind atinge AUROC de 0,807, contra 0,856 do Baseline (perda de 0,049 pontos absolutos, ou aproximadamente 5,7\% de redução relativa). No LSTM, a perda é mais expressiva: 0,806 vs.\ 0,868, totalizando 0,062 pontos absolutos (ou 7,1\% relativo). A perda em AUPRC, métrica especialmente sensível ao desbalanceamento de classes, é ainda mais marcada: 0,036 pontos no ConCare e 0,088 pontos no LSTM, indicando degradação substancial da capacidade do modelo de identificar corretamente os casos minoritários (óbitos).
+
+Este achado tem dupla implicação. Tecnicamente, ele estabelece que o vetor demográfico contribui com aproximadamente 5 a 7\% do desempenho preditivo dos modelos, contribuição que se concentra desproporcionalmente sobre a precisão na classe minoritária. Juridicamente, ele desafia a premissa de que a remoção total de atributos demográficos é uma estratégia neutra de \textit{compliance}: na prática, esta abordagem sacrifica utilidade clínica relevante --- particularmente a capacidade do modelo de identificar pacientes em risco de óbito, que é justamente a finalidade clínica do sistema. Os Cenários A, B e C demonstram que é possível obter níveis de proteção de privacidade comparáveis ao Blind (em termos de risco residual de reidentificação) mantendo a maior parte da utilidade preditiva, configurando uma alternativa tecnicamente superior e legalmente defensável.
+
+\section{Análise de Subgrupos por Gênero}
+\label{sec:resultados-subgrupos}
+
+A avaliação de utilidade global, embora informativa, pode mascarar disparidades de desempenho entre subgrupos demográficos. \citeonline{Chen2023fairness}, em revisão sobre fairness algorítmica em IA aplicada à saúde, argumentam que a avaliação de modelos clínicos requer rigorosamente a inspeção de métricas estratificadas por subgrupo, pois algoritmos clinicamente úteis no agregado podem produzir disparidades sistemáticas entre grupos protegidos. Esta preocupação é amplificada pela documentação de viés racial em algoritmos clínicos amplamente utilizados na prática hospitalar, como demonstrado por \citeonline{Obermeyer2019} ao auditar um algoritmo comercial de triagem de saúde que sub-recomendava cuidados a pacientes negros em comparação a pacientes brancos com mesmo nível de necessidade clínica. Esta seção apresenta a análise estratificada do desempenho preditivo por gênero para ambos os modelos e todos os cenários.
+
+A coorte de teste é composta por 1.324 pacientes do gênero feminino (158 óbitos, taxa de mortalidade de 11,9\%) e 1.649 do gênero masculino (172 óbitos, taxa de 10,4\%). A \autoref{tab:subgrupos-auroc} apresenta o AUROC estratificado por gênero para cada combinação de modelo e cenário.
+
+\begin{table}[ht]
+\centering
+\caption{AUROC por Gênero, Cenário e Arquitetura (IC 95\%)}
+\label{tab:subgrupos-auroc}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{l|c|c|c|c}
+\hline
+ & \multicolumn{2}{c|}{\textbf{ConCare}} & \multicolumn{2}{c}{\textbf{LSTM}} \\ \cline{2-5}
+\textbf{Cenário} & \textbf{Feminino} & \textbf{Masculino} & \textbf{Feminino} & \textbf{Masculino} \\ \hline
+Baseline                        & 0,858 (0,831--0,882) & 0,869 (0,844--0,894) & 0,856 (0,829--0,881) & 0,890 (0,870--0,912) \\
+Cenário A ($k=5$)               & 0,850 (0,822--0,876) & 0,870 (0,846--0,894) & 0,856 (0,828--0,882) & 0,884 (0,862--0,905) \\
+Cenário B ($k=10$, $l=2$)       & 0,848 (0,819--0,875) & 0,871 (0,846--0,895) & 0,853 (0,825--0,881) & 0,887 (0,865--0,908) \\
+Cenário C (DP $\epsilon=2{,}0$) & 0,832 (0,800--0,862) & 0,860 (0,833--0,885) & 0,861 (0,834--0,889) & 0,870 (0,846--0,893) \\ \hline
+\end{tabular}
+\end{table}
+
+Três achados emergem da análise estratificada. Primeiro, observa-se uma disparidade sistemática de desempenho entre os gêneros já no Baseline, com ambos os modelos apresentando maior AUROC para pacientes do gênero masculino (gap de 0,011 no ConCare e 0,034 no LSTM). Este padrão é coerente com observações documentadas na literatura sobre vieses em modelos clínicos preditivos \cite{Obermeyer2019, Chen2023fairness}, e indica que a disparidade é uma propriedade do par dataset-modelo, não introduzida pela pseudonimização em si.
+
+É importante contrastar este achado com a auditoria de fairness conduzida por \citeonline{Roosli2022} sobre o mesmo benchmark de mortalidade hospitalar do MIMIC-III, na qual os autores avaliaram o modelo de \citeonline{Harutyunyan2019} e concluíram que ``não há diferenças notáveis de desempenho para gênero''\footnote{Tradução do trecho original: \textit{``There are no notable performance differences for gender''}.} na validação interna. A discrepância em relação ao nosso achado tem explicação metodológica direta: o modelo auditado por Röösli não incorpora variáveis demográficas como \textit{features} (utilizando apenas as 17 variáveis fisiológicas do \textit{benchmark}), enquanto as arquiteturas avaliadas neste trabalho recebem, durante o aprendizado, um vetor estático que agrega idade, gênero, etnia, tipo de unidade de internação e marcadores fenotípicos. A presença explícita de gênero no espaço de \textit{features} permite ao modelo aprender e amplificar padrões correlacionados a este atributo, condição que o modelo \textit{gender-blind} de Harutyunyan não reproduz. Este contraste reforça uma observação central de \citeonline{Chen2023fairness}: a equidade algorítmica em IA aplicada à saúde depende criticamente de quais atributos demográficos são fornecidos ao modelo durante o treinamento, e modelos que utilizam tais atributos podem expor disparidades que ficariam invisíveis em arquiteturas que os ignoram.
+
+Segundo, a aplicação das técnicas de pseudonimização afeta os subgrupos de forma assimétrica e divergente entre arquiteturas. No modelo ConCare, a degradação acumulada do Baseline ao Cenário C foi de $-0{,}026$ no subgrupo feminino e apenas $-0{,}009$ no masculino --- ou seja, a pseudonimização baseada em Privacidade Diferencial amplificou a disparidade preexistente. Já no modelo LSTM, o padrão se inverte: o subgrupo masculino degrada $-0{,}020$ enquanto o feminino apresenta variação positiva de $+0{,}005$, configurando uma redução do gap entre os gêneros. No Cenário C com LSTM, o gap entre gêneros cai para 0,009, tornando-se a configuração estratificadamente mais equitativa entre as testadas.
+
+Terceiro, o Cenário B (configuração com melhor desempenho global) mantém a disparidade entre gêneros próxima ao Baseline em ambas as arquiteturas (gaps de 0,023 e 0,034), indicando que esta configuração de pseudonimização é \textit{neutra} do ponto de vista de equidade --- não amplifica nem mitiga as disparidades existentes. Isso a posiciona como uma escolha defensável quando o objetivo primário é a preservação de utilidade global sem introduzir efeitos colaterais de fairness.
+
+A combinação destes três achados sugere que decisões de \textit{compliance} com a LGPD que envolvam pseudonimização devem considerar conjuntamente a arquitetura do modelo a ser treinado e o atributo demográfico em risco. A escolha da técnica não é apenas uma decisão de \textit{trade-off} entre risco e utilidade global, mas também uma decisão sobre qual subgrupo absorverá o custo da proteção. Para arquiteturas que dependem intensivamente do vetor estático (como ConCare), Privacidade Diferencial pode amplificar disparidades preexistentes; para arquiteturas com fusão tardia, a mesma técnica pode atuar de forma equalizadora.
+
+\section{Síntese: Trade-off Privacidade-Utilidade e Implicações para a LGPD}
+\label{sec:resultados-sintese}
+
+Os resultados apresentados neste capítulo permitem responder à pergunta central de pesquisa de forma quantitativa e estratificada: a anonimização robusta pode viabilizar o uso legal de dados sensíveis sob a LGPD, preservando substancialmente a utilidade clínica de modelos de \textit{Deep Learning} em UTI, desde que se selecione apropriadamente a técnica em função das características da arquitetura e dos atributos demográficos relevantes para a tarefa.
+
+O Cenário B emerge como o ponto ótimo de equilíbrio identificado neste estudo. Sob esta configuração, o risco máximo de reidentificação reduz-se a 1,37\%, valor compatível com diretrizes operacionais consolidadas para dados de saúde \cite{ElEmam2013}, e a utilidade clínica é preservada com degradação inferior a 0,5 ponto percentual de AUROC em ambas as arquiteturas testadas. Adicionalmente, o cenário preserva integralmente o volume amostral e mantém as disparidades de gênero próximas ao Baseline, configurando uma escolha defensável simultaneamente sob critérios de privacidade, utilidade e equidade.
+
+O Cenário C (Privacidade Diferencial) oferece a garantia teórica mais robusta, mas o custo amostral de 31,1\% compromete sua aplicabilidade prática em contextos clínicos onde o volume de dados é tipicamente limitado. Este achado é coerente com a literatura sobre o custo da anonimização em dados clínicos \cite{Pilgram2024} e com comparações sistemáticas que documentam maior \textit{information loss} para Privacidade Diferencial isolada em relação a combinações sintáticas como $k+l$ \cite{Fakeeroodeen2021}, sugerindo que sua aplicação deve ser reservada a contextos de pesquisa onde o orçamento amostral seja folgado ou onde a preservação de atributos sensíveis (como Ethnicity) seja estritamente necessária para mitigação de viés algorítmico.
+
+O Cenário A, embora ofereça a maior preservação de granularidade etária, apresentou degradação de utilidade superior ao Cenário B em ambas as arquiteturas, indicando que --- na configuração testada --- o relaxamento do critério de privacidade ($k=5$ vs.\ $k=10$) não compensa a perda informacional decorrente da supressão de Ethnicity quando combinada com a ausência da restrição $l$-diversidade.
+
+O controle Blind quantifica empiricamente o custo da estratégia de \textit{compliance} por remoção total de dados demográficos: degradação de 5 a 7\% no AUROC e desproporcionalmente maior em AUPRC. Vale observar que os AUROC obtidos no Blind (0,807 ConCare; 0,806 LSTM) ficam inclusive abaixo da LSTM padrão de \citeonline{Harutyunyan2019} no mesmo \textit{benchmark} (0,854), arquitetura essa que opera nativamente sem componente demográfico. A diferença sugere que arquiteturas projetadas para integrar o vetor estático demográfico não recuperam plenamente seu desempenho quando este é simplesmente zerado --- ou seja, o ônus arquitetural de manter o componente estático sem informação útil é maior do que o de não tê-lo. Este resultado fornece argumento técnico contra interpretações excessivamente conservadoras da LGPD que recomendem a remoção integral de atributos demográficos, demonstrando que pseudonimização robusta (como o Cenário B) é uma alternativa tecnicamente superior e juridicamente defensável.
+
+Sob a ótica do Art. 6º, IX da LGPD (não-discriminação), a análise de subgrupos revelou que a escolha da técnica de pseudonimização tem efeitos diferenciados sobre disparidades de gênero, e que esses efeitos dependem da arquitetura do modelo. Esta observação reforça a recomendação de \citeonline{Chen2023fairness} de que decisões sobre IA aplicada à saúde devem ser tomadas com inspeção sistemática de métricas estratificadas, não como diretrizes universais aplicáveis a qualquer cenário clínico.
+
+A síntese geral é que ``anonimização absoluta'' é um ideal teórico raramente atingível sem custo proibitivo de utilidade, mas que estratégias de pseudonimização robusta --- particularmente aquelas que combinam múltiplos critérios sintáticos como $k$-anonimato e $l$-diversidade --- oferecem um caminho prático de \textit{compliance} com a LGPD compatível com a manutenção da inovação em IA aplicada à saúde. O dilema regulatório de ``compartilhar tudo ou compartilhar nada'' é, portanto, falso: existe um espaço tecnicamente caracterizável e empiricamente defensável de configurações que conciliam ambas as exigências.
