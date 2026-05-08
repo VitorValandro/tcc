@@ -27,14 +27,14 @@ Foi realizado:
     
     \item \textbf{Execução Controlada de Anonimização:} Utilização de ferramenta especializada (ARX) para aplicação determinística dos algoritmos, com registro de métricas de risco (Prosecutor, Journalist, Marketer risks) em cada cenário.
     
-    \item \textbf{Protocolo de Avaliação Bifacetado:} Combinação de auditoria de risco de reidentificação (via ARX) com avaliação de utilidade clínica (treinamento do modelo ConCare em dados anonimizados, comparação com baseline em dados originais).
+    \item \textbf{Protocolo de Avaliação Bifacetado:} Combinação de auditoria de risco de reidentificação (via ARX, três modelos de ameaça) com avaliação de utilidade clínica orientada à tarefa — treinamento dos modelos ConCare e LSTM Late Fusion em dados anonimizados e comparação com baseline nos dados originais, incluindo análise de subgrupos por gênero.
     
     \item \textbf{Rigor Estatístico:} Cálculo de intervalos de confiança de 95\% para métricas de performance (AUROC, AUPRC) através de bootstrap não-paramétrico com 1.000 reamostragens, permitindo quantificação de incerteza.
 \end{enumerate}
 
 \subsection{Viabilidade Técnica Consolidada}
 
-A execução completa do pipeline — desde preparação de dados até avaliação de modelos — demonstrou que a aplicação prática de técnicas de anonimização em dados clínicos complexos é viável do ponto de vista técnico. O papel central do contexto demográfico estático no modelo ConCare estabeleceu um teste particularmente rigoroso: dados demográficos são precisamente aqueles atacados pela anonimização, tornando o impacto potencial maximizado.
+A execução completa do pipeline — desde preparação de dados até avaliação de modelos — demonstrou que a aplicação prática de técnicas de anonimização em dados clínicos complexos é viável do ponto de vista técnico. A inclusão de dois modelos com estratégias distintas de integração demográfica — ConCare (\textit{cross-attention}) e LSTM Late Fusion (concatenação tardia) — estabeleceu um teste comparativo rigoroso: o ConCare, por incorporar o vetor demográfico como \textit{query} de atenção sobre toda a série temporal, configura o cenário de maior sensibilidade esperada à anonimização, enquanto o LSTM oferece o contraponto de uma arquitetura com fusão tardia. A convergência na ordenação de robustez entre cenários observada em ambas as arquiteturas fortalece a validade externa das conclusões.
 
 \section{Limitações do Desenho Experimental}
 \label{sec:conclusao-limitacoes}
@@ -44,11 +44,11 @@ O estudo apresenta limitações que devem ser consideradas na generalização do
 \begin{enumerate}
     \item \textbf{Monocentricidade de Dados:} A amostra provém exclusivamente do MIMIC-III, coletada de um único hospital (Beth Israel Deaconess Medical Center) em um país (EUA) com contextos demográficos, clínicos e epidemiológicos específicos. Generalizações para outras populações ou serviços de saúde (como o SUS no Brasil) requerem validação adicional.
     
-    \item \textbf{Especificidade Arquitetural:} A avaliação de utilidade clínica concentrou-se exclusivamente no modelo ConCare. Outros modelos de deep learning (RNNs tradicionais, Transformers, etc.) podem apresentar sensibilidades distintas à anonimização, especialmente modelos que não integram dados demográficos de forma explícita.
+    \item \textbf{Especificidade Arquitetural:} A avaliação de utilidade clínica foi conduzida sobre dois modelos — ConCare (\textit{cross-attention}) e LSTM Late Fusion (concatenação tardia) — representando os dois paradigmas dominantes de integração de features estáticas e dinâmicas em registros de saúde \cite{Shickel2018}. Embora essa escolha bidirecional aumente a robustez das conclusões em relação a estudos de modelo único, outras arquiteturas (Transformers, GRU-based, modelos sem componente demográfico explícito) podem apresentar sensibilidades distintas à anonimização, e a generalização dos achados para esse espectro requer validação adicional.
     
     \item \textbf{Tarefa Única de Predição:} Testou-se especificamente a tarefa de predição de mortalidade hospitalar. Outras tarefas clínicas (previsão de tempo de permanência, detecção precoce de sepse, recomendação de intervenções) podem apresentar diferentes trade-offs entre privacidade e utilidade.
     
-    \item \textbf{Questões de Equidade Algorítmica:} A supressão da variável Ethnicity (Scenarios A e B) para alcançar os critérios de privacidade sintática levanta questões críticas sobre equidade. Enquanto a manutenção de acurácia global possa ser atingida, não está avaliado neste trabalho se a anonimização introduz ou amplifica disparidades de erro entre grupos demográficos. Este é um problema que transcende o escopo de utilidade preditiva global.
+    \item \textbf{Equidade Algorítmica — Análise de Gênero e Lacuna de Etnia:} A análise de subgrupos conduzida estratificou o desempenho por gênero (feminino e masculino), revelando disparidades preexistentes no baseline e efeitos assimétricos das técnicas de pseudonimização entre os subgrupos. No entanto, a supressão de Ethnicity nos Cenários A e B impossibilitou a análise estratificada por raça/etnia — precisamente o eixo demográfico com maior potencial de amplificação de disparidades em algoritmos clínicos \cite{Obermeyer2019}. A avaliação de equidade étnica requer configurações de anonimização que preservem esta variável (como o Cenário C), restringindo as conclusões sobre fairness étnica ao único cenário em que Ethnicity não foi suprimida.
     
     \item \textbf{Parâmetros de Privacidade Diferencial:} A seleção de $\epsilon=2.0$ para Differential Privacy reflete um ponto de equilíbrio empírico reportado na literatura, mas a sensibilidade a variações em $\epsilon$ e $\delta$ não foi sistematicamente explorada.
 \end{enumerate}

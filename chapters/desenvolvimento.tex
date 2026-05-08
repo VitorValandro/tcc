@@ -1,37 +1,12 @@
 \chapter{Desenvolvimento e Execução}
 \label{ch:desenvolvimento}
 
-Este capítulo descreve as etapas práticas executadas para implementar o desenho metodológico proposto. Conforme delineado na \autoref{ch:metodologia}, o desenvolvimento segue um fluxo estruturado iniciando-se pela habilitação ética e técnica para acesso a dados sensíveis, passando pela preparação e análise exploratória dos dados, pela aplicação controlada de técnicas de anonimização, e culminando na configuração e validação do protocolo de avaliação de utilidade clínica. As seções a seguir detalham cada etapa deste pipeline.
+Este capítulo descreve as etapas práticas executadas para implementar o desenho metodológico proposto. Conforme delineado na \autoref{ch:metodologia}, o desenvolvimento segue um fluxo estruturado iniciando-se pela habilitação ética e técnica para acesso a dados sensíveis, passando pela preparação dos dados, pela aplicação controlada de técnicas de anonimização e culminando no treinamento e avaliação dos modelos preditivos.
 
 \section{Obtenção de Acesso Credenciado ao PhysioNet}
 \label{sec:dev-physionet}
 
-A primeira e mais crítica etapa do desenvolvimento foi a obtenção de acesso às bases de dados restritas da plataforma \textit{PhysioNet}. Diferentemente de conjuntos de dados públicos abertos (open data), bases como o MIMIC-III e MIMIC-IV contêm informações clínicas detalhadas que, embora desidentificadas, exigem um nível de responsabilidade elevado por parte do pesquisador para evitar riscos de reidentificação maliciosa.
-
-O processo de credenciamento (\textit{credentialing process}) foi realizado e concluído com êxito, compreendendo as seguintes etapas obrigatórias:
-
-\subsection{Treinamento em Ética em Pesquisa}
-Para qualificar-se como um usuário autorizado, foi necessário comprovar competência em ética na pesquisa com seres humanos. O autor realizou o curso "Data or Specimens Only Research", oferecido pelo programa CITI (\textit{Collaborative Institutional Training Initiative}).
-
-O treinamento abordou tópicos cruciais que fundamentam a responsabilidade ética deste trabalho, incluindo:
-\begin{itemize}
-    \item Histórico e princípios éticos da pesquisa biomédica (Relatório Belmont).
-    \item Regulações de privacidade e confidencialidade (HIPAA nos EUA, correlacionada à LGPD no Brasil).
-    \item Avaliação de riscos para os participantes da pesquisa.
-\end{itemize}
-
-A conclusão deste curso gerou uma certificação oficial, que foi submetida e validada pela equipe do MIT (\textit{Massachusetts Institute of Technology}).
-
-\subsection{Formalização do Acordo de Uso de Dados}
-Após a validação do treinamento ético, foi firmado o \textit{Data Use Agreement} (DUA). Este é um contrato legalmente vinculante no qual o pesquisador se compromete a:
-\begin{enumerate}
-    \item Não tentar identificar ou contatar nenhum indivíduo presente nos dados.
-    \item Utilizar os dados exclusivamente para fins de pesquisa científica.
-    \item Manter a segurança dos dados, não compartilhando as credenciais de acesso ou os dados brutos com terceiros não autorizados.
-    \item Citar adequadamente a fonte dos dados em quaisquer publicações resultantes.
-\end{enumerate}
-
-Com a aprovação do credenciamento, o autor obteve acesso integral aos arquivos do MIMIC-III e MIMIC-IV, além de outras bases de dados sob custódia da Physionet, permitindo o início da fase de análise exploratória e seleção de atributos, que constituirá a próxima etapa do desenvolvimento.
+O acesso aos dados do MIMIC-III foi obtido através do processo de credenciamento da plataforma \textit{PhysioNet} \cite{Goldberger2000}. O processo exigiu a conclusão do curso de ética em pesquisa com seres humanos ``Data or Specimens Only Research'' do programa CITI (\textit{Collaborative Institutional Training Initiative}), com emissão de certificação validada pelo MIT, seguida da assinatura do \textit{Data Use Agreement} (DUA) — contrato que proíbe tentativas de reidentificação, restringe o uso aos fins declarados e exige citação adequada da fonte. Com a aprovação do credenciamento, o autor obteve acesso integral aos arquivos do MIMIC-III \cite{Johnson2016}.
 
 \section{Preparação e Análise Exploratória de Dados}
 \label{sec:dev-preparacao}
@@ -39,7 +14,7 @@ Com a aprovação do credenciamento, o autor obteve acesso integral aos arquivos
 Após a obtenção do acesso credenciado, os dados do MIMIC-III foram carregados em um ambiente seguro e isolado para o processamento. A etapa de preparação envolveu:
 
 \subsection{Análise Exploratória de Dados (EDA)}
-Realizou-se uma análise exploratória abrangente para compreender a distribuição, cardinalidade e correlações entre as variáveis de interesse. Foram examinadas:
+Realizou-se uma análise exploratória abrangente para compreender a distribuição, cardinalidade e correlações entre as variáveis de interesse. Este processo validou a consistência da amostra em relação aos parâmetros de benchmark e confirmou a viabilidade das hierarquias de generalização propostas. Foram examinadas:
 \begin{itemize}
     \item Distribuição etária da população (média 63.9 anos), verificando a adequação das faixas de generalização propostas;
     \item Distribuição de categories de Ethnicity e sua representatividade na amostra;
@@ -51,20 +26,44 @@ Realizou-se uma análise exploratória abrangente para compreender a distribuiç
 \subsection{Seleção de Variáveis e Limpeza}
 Foram removidas todas as variáveis contendo identificadores diretos (nomes, números de prontuário, números de identificação pessoal). Os dados demográficos foram verificados quanto a consistência e completude. Valores ausentes em quasi-identificadores foram tratados de forma conservadora: registros com informações incompletas em Age, Gender ou Ethnicity foram excluídos antes da aplicação de técnicas de anonimização, assegurando a qualidade das hierarquias de generalização.
 
+\subsubsection{Pipeline de Pré-processamento para o Benchmark de Mortalidade}
+
+A preparação dos dados seguiu rigorosamente o protocolo de pré-processamento de benchmark estabelecido por Harutyunyan et al.\ \cite{Harutyunyan2019} para o IHM task (predição de mortalidade hospitalar) no MIMIC-III. De modo a garantir reprodutibilidade e conformidade exata com o benchmark de referência, utilizou-se a implementação oficial do código disponibilizada no repositório público \texttt{https://github.com/YerevaNN/mimic3-benchmarks} \cite{Harutyunyan2019}. Este protocolo define um conjunto reprodutível de etapas que permitem comparabilidade com resultados publicados, incluindo os do modelo ConCare \cite{Ma2020} que adota a mesma pipeline. A adoção do código público original garante que as etapas de extração, imputação e codificação de features seguem exatamente a especificação do benchmark de referência, eliminando riscos de implementação divergente e assegurando que nossos resultados são diretamente comparáveis com a literatura.
+
+\textit{Variáveis clínicas extraídas:} 34 variáveis fisiológicas foram sistemicamente extraídas, amostradas em frequência horária durante as primeiras 48 horas de internação em UTI. As variáveis incluem: Heart Rate, Blood Pressure (Sistólica, Diastólica, Média), Respiratory Rate, SpO\textsubscript{2}, Temperatura corporal, Peso corporal, pH arterial, PaO\textsubscript{2}, PaCO\textsubscript{2}, Bicarbonato, Lactato, Glicose sanguínea, Potássio sérico, Sódio sérico, Cloro sérico, Magnésio, Cálcio, Fosfato, BUN (Urea), Creatinina, Albumina, Bilirrubina total, Contagem de leucócitos, Hemoglobina, Hematócrito, Contagem de plaquetas, INR, Prothrombin Time, GCS Total, GCS Motor, GCS Verbal e FiO\textsubscript{2}.
+
+\textit{Tratamento de valores ausentes:} Valores ausentes nas séries temporais foram preenchidos usando a estratégia de três camadas adotada no protocolo de benchmark \cite{Harutyunyan2019}: (1) \textit{forward-fill} — propagação do último valor observado para frente no tempo, técnica adequada para variáveis fisiológicas que tendem a permanecer estáveis entre medições consecutivas; (2) \textit{backward-fill} — propagação para trás para preencher janelas iniciais sem nenhuma observação registrada; (3) imputação por mediana da variável calculada sobre o conjunto de treino, aplicada a variáveis inteiramente ausentes ao longo das 48 horas de uma admissão. A mediana de treino é escolhida por ser robusta a outliers e por não requerer informação do conjunto de teste, evitando vazamento de dados \cite{Che2018}. Esta abordagem é amplamente utilizada em modelos de predição em UTI com séries temporais irregulares \cite{Harutyunyan2019, Che2018}.
+
+\textit{Rótulo de desfecho:} O rótulo IHM foi extraído diretamente da coluna \texttt{HOSPITAL\_EXPIRE\_FLAG} na tabela \texttt{ADMISSIONS}, sendo binário (0 = alta hospitalar, 1 = morte durante internação).
+
+\textit{Composição do vetor estático de 42 dimensões:} O vetor demográfico-clínico preservado foi montado como segue:
+\begin{itemize}
+    \item Age (1 dimensão): calculado como a idade no momento de admissão em UTI (ADMITTIME $-$ DOB em anos);
+    \item Gender (2 dimensões): codificação one-hot binária (is\_female, is\_male);
+    \item Ethnicity (5 dimensões): codificação one-hot para as 5 categorias mais frequentes do MIMIC-III; categorias raras agrupadas como ``Other'';
+    \item Admission Unit Type (5 dimensões): codificação one-hot para o tipo de UTI no qual o paciente foi admitido (Medical, Surgical, Trauma, Cardiac, etc.);
+    \item CCS Phenotypes (25 dimensões): 25 comorbidades extraídas via Clinical Classification Software (CCS) a partir de códigos ICD-9 no histórico clínico pré-admissão do paciente;
+    \item Padding (4 dimensões): 4 zeros de padding para alinhar o vetor a 42 dimensões (utilizado pela arquitetura ConCare).
+\end{itemize}
+
+\textit{Variáveis temporais não utilizadas como features:} É importante documentar o que \textit{não} foi usado. As datas DOB (data de nascimento), DOD (data de morte), DEATHTIME (hora de morte) e OUTTIME (hora de saída da UTI) foram \textit{não} incluídas como features no treinamento dos modelos. DOB foi utilizada exclusivamente para o cálculo da idade (feature único que dela derivou); INTIME foi utilizado unicamente para ordenação cronológica dos episódios. A exclusão destas variáveis temporais garante que os modelos dependem exclusivamente do contexto clínico (serie temporal + atributos estáticos) e não de artefatos de timing que poderiam confundir a análise de anonimização.
+
 \section{Aplicação de Técnicas de Anonimização (ARX)}
 \label{sec:dev-anonimizacao}
 
-O processo de anonimização foi executado utilizando a ferramenta \textbf{ARX Data Anonymization Tool} versão 3.2.0 em um ambiente computacional isolado. Para cada um dos três cenários definidos na \autoref{tab:cenarios-anonimizacao} da Metodologia, foram seguidos os seguintes passos:
+O processo de anonimização foi executado utilizando a ferramenta \textbf{ARX Data Anonymization Tool} versão 3.2.0 em um ambiente computacional isolado. Conforme descrito na \autoref{sec:metod-aquisicao}, a anonimização foi aplicada sobre a amostra \textit{já filtrada} de $N = 17.917$ admissões — e não sobre o conjunto bruto de 42.277 —, garantindo que os grupos de equivalência e as métricas de risco reflitam exatamente a população exposta na pesquisa. Para cada um dos cenários definidos na \autoref{tab:cenarios-anonimizacao} da Metodologia, foram seguidos os seguintes passos:
 
 \subsection{Configuração de Hierarquias no ARX}
-As taxonomias de generalização para Age e Ethnicity foram implementadas em formato XML conforme especificado na Metodologia. Para cada quasi-identificador, testou-se a qualidade da hierarquia através de simulações preliminares, assegurando que os níveis de generalização preservassem significado clínico (ex: faixas etárias de 10 anos ainda mantêm interpretabilidade clínica).
+As taxonomias de generalização para Age, Ethnicity e Gender foram implementadas em formato XML conforme especificado na \autoref{sec:metod-anonimizacao}. Para cada quasi-identificador, testou-se a qualidade da hierarquia através de simulações preliminares, assegurando que os níveis de generalização preservassem significado clínico.
+
+Após execução do algoritmo de otimização do ARX para cada cenário, as transformações selecionadas foram: (i) \textbf{Age}: faixas de 5 anos no Cenário A; faixas de 10 anos nos Cenários B e C; (ii) \textbf{Ethnicity}: supressão total nos Cenários A e B; valor original preservado no Cenário C; (iii) \textbf{Gender}: valor original preservado em todos os cenários. A supressão de Ethnicity nos Cenários A e B reflete a impossibilidade de formar grupos de equivalência de tamanho $\geq k$ com os valores originais, dada a alta cardinalidade e distribuição desigual das categorias étnicas no MIMIC-III. No Cenário C, o mecanismo de Privacidade Diferencial satisfaz o orçamento de privacidade $\varepsilon$ por supressão seletiva de registros (e não por generalização de atributos), o que permite preservar os valores originais de Ethnicity. A preservação de Gender em todos os cenários confirma que o atributo binário não configura risco diferencial de reidentificação além do que já é capturado pelo controle de Age e Ethnicity em nenhum dos critérios de privacidade testados.
 
 \subsection{Execução dos Algoritmos de Privacidade}
 O ARX foi configurado para executar cada cenário de forma determinística:
 \begin{itemize}
-    \item \textbf{Scenario A:} Aplicação de algoritmo k-anonymity com parâmetro $k=5$, permitindo supressão de outliers (registros raramente encontrados que comprometessem a formação de grupos);
-    \item \textbf{Scenario B:} Aplicação conjunta de k-anonymity ($k=10$) e l-diversity ($l=2$) sobre o atributo Primary Diagnosis, com restrição de supressão mínima;
-    \item \textbf{Scenario C:} Aplicação de Differential Privacy com parâmetros $\epsilon=2.0$ e $\delta=10^{-5}$, permitindo que o algoritmo removesse registros "outliers" de privacidade para manter a garantia de $\epsilon$.
+    \item \textbf{Cenário A:} Aplicação de algoritmo k-anonymity com parâmetro $k=5$, permitindo supressão de outliers (registros raramente encontrados que comprometessem a formação de grupos);
+    \item \textbf{Cenário B:} Aplicação conjunta de k-anonymity ($k=10$) e l-diversity ($l=2$) sobre o atributo Primary Diagnosis, com restrição de supressão mínima;
+    \item \textbf{Cenário C:} Aplicação de Differential Privacy com parâmetros $\epsilon=2.0$ e $\delta=10^{-5}$, permitindo que o algoritmo removesse registros "outliers" de privacidade para manter a garantia de $\epsilon$.
 \end{itemize}
 
 Cada execução foi registrada em log, capturando o número de registros processados, o número de registros suprimidos, a proporção de células generalizadas por atributo, e as métricas de risco calculadas automaticamente pelo ARX.
@@ -72,7 +71,7 @@ Cada execução foi registrada em log, capturando o número de registros process
 \subsection{Validação das Versões Anonimizadas}
 Após cada execução, as três versões anonimizadas do dataset foram validadas através de:
 \begin{itemize}
-    \item Verificação de que cada versão anonimizada satisfaz o critério de privacidade declarado (ex: todo registro em Scenario B tem $k \geq 10$);
+    \item Verificação de que cada versão anonimizada satisfaz o critério de privacidade declarado (ex: todo registro em Cenário B tem $k \geq 10$);
     \item Inspeção manual de uma amostra de registros para assegurar que a generalização preservou significado clínico e não introduziu artefatos ou inconsistências;
     \item Comparação das distribuições univariadas de Age, Gender, Ethnicity nos dados originais vs. anonimizados.
 \end{itemize}
@@ -82,33 +81,44 @@ Após cada execução, as três versões anonimizadas do dataset foram validadas
 
 O modelo ConCare foi implementado em Python 3.8+ utilizando PyTorch, reproduzindo a arquitetura descrita no trabalho original \cite{Ma2020}. Os passos de configuração foram:
 
-\subsection{Pré-processamento das Séries Temporais}
-A partir da amostra final de 17.917 admissões (após filtro de duração $\geq 48$ horas), foram extraídas:
-\begin{itemize}
-    \item \textbf{Vetor Dinâmico (time series):} 34 variáveis fisiológicas amostradas a cada hora durante as primeiras 48 horas de permanência em UTI (ex: Heart Rate, Blood Pressure, SpO\$_2\$, pH, Glucose, Respiratory Rate). Valores faltantes foram preenchidos por forward-fill seguido de back-fill, técnica padrão em séries médicas;
-    \item \textbf{Vetor Estático (contexto demográfico):} 42 dimensões incluindo Age, Gender, Ethnicity (em seu estado original ou generalizado conforme o scenario), Admission Unit Type, e 25 comorbidades extraídas via CCS (Clinical Classification Software) a partir de códigos ICD-9.
-\end{itemize}
-
 \subsection{Divisão de Conjuntos e Estratificação}
-A amostra de 17.917 admissões foi dividida em:
+A divisão foi realizada no nível de paciente (\textit{subject\_id}), seguindo a convenção estabelecida no benchmark de Harutyunyan et al.\ \cite{Harutyunyan2019}: todas as admissões de um mesmo paciente pertencem ao mesmo conjunto, prevenindo vazamento de informação entre treino e teste e garantindo que a avaliação mensure generalização a novos pacientes. A distribuição resultante aproxima-se de:
+
 \begin{itemize}
-    \item \textbf{Training set:} 70\% (12.541 admissões);
-    \item \textbf{Validation set:} 15\% (2.688 admissões);
-    \item \textbf{Test set:} 15\% (2.688 admissões).
+    \item \textbf{Training set:} $\approx$70\% (12.541 admissões);
+    \item \textbf{Validation set:} $\approx$15\% (2.688 admissões);
+    \item \textbf{Test set:} $\approx$15\% (2.973 admissões).
 \end{itemize}
 
-A divisão foi estratificada por classe de outcome (óbito sim/não) para preservar a proporção de mortalidade (10.6\%) em cada subset, evitando viés de desbalanceamento.
+Os valores exatos por conjunto dependem da distribuição de admissões por paciente; o conjunto de teste, utilizado em todas as avaliações de desempenho, conta com 2.973 admissões. A divisão foi estratificada por classe de outcome (óbito sim/não) para preservar a proporção de mortalidade ($\approx$10.6\%) em cada subset, evitando viés de desbalanceamento.
 
 \subsection{Treinamento e Validação do Baseline}
-Antes de avaliar o impacto da anonimização, o modelo ConCare foi treinado nos dados **originais** (sem anonimização) para estabelecer a \textit{baseline} de performance ideal. Este treinamento utilizou:
+Antes de avaliar o impacto da anonimização, o modelo ConCare foi treinado nos dados \textbf{originais} (sem anonimização) para estabelecer a \textit{baseline} de performance ideal. Este treinamento utilizou:
 \begin{itemize}
     \item Otimizador: Adam ($lr=0.001$);
     \item Função de perda: Binary Cross-Entropy (BCE), apropriada para classificação binária;
-    \item Número de épocas: até 200, com \textit{early stopping} baseado em performance no validation set;
+    \item Número de épocas: até 50, com \textit{early stopping} baseado em performance no validation set;
     \item Monitoramento: AUROC e AUPRC em cada época, registrados para análise posterior.
 \end{itemize}
 
 O desempenho no **test set** dos dados originais estabeleceu a baseline contra a qual todos os cenários anonimizados são comparados.
+
+\section{Implementação do Modelo LSTM Late Fusion}
+\label{sec:dev-lstm}
+
+O modelo LSTM Late Fusion foi implementado em Python 3.8+ utilizando PyTorch. A arquitetura consiste em uma rede LSTM bidirecional (BiLSTM) que processa as mesmas 34 variáveis fisiológicas das 48 horas iniciais de permanência em UTI, gerando uma representação temporal compacta ao fim da sequência. Esta representação é então concatenada com o vetor estático de 42 dimensões, e o vetor resultante é processado por uma camada densa com ativação sigmoidal para produzir a probabilidade de mortalidade hospitalar.
+
+\subsection{Treinamento do LSTM Baseline}
+O modelo LSTM foi treinado nos dados originais (sem anonimização) seguindo os mesmos hiperparâmetros e protocolo do ConCare:
+\begin{itemize}
+    \item Otimizador: Adam ($lr=0.001$);
+    \item Função de perda: Binary Cross-Entropy (BCE);
+    \item Número de épocas: até 50, com \textit{early stopping} baseado em performance no validation set;
+    \item Divisão de conjuntos: idêntica à utilizada para o ConCare.
+\end{itemize}
+
+\subsection{Treinamento do LSTM em Dados Anonimizados}
+Para cada cenário (A, B, C), o modelo LSTM foi retreinado utilizando exclusivamente a versão anonimizada correspondente do dataset, mantendo rigorosamente os mesmos hiperparâmetros e divisão de conjuntos do baseline. Assim como no ConCare, a única variação entre os modelos treinados é o conteúdo do vetor estático: nos cenários anonimizados, Age, Gender e Ethnicity assumem os valores generalizados definidos pelo respectivo cenário. O desempenho no test set é avaliado com as mesmas métricas (AUROC e AUPRC com IC 95\% via bootstrap não-paramétrico de 1.000 reamostragens).
 
 \section{Protocolo de Avaliação de Risco e Utilidade}
 \label{sec:dev-protocolo-avaliacao}
@@ -132,21 +142,30 @@ Para cada cenário (A, B, C), o modelo ConCare foi retreinado utilizando exclusi
 A única diferença foi a substituição do vetor estático: em vez de Age (exato), Gender e Ethnicity (originais), o modelo recebeu estes dados em sua forma generalizada conforme definido pelo cenário. Isso permite isolar o impacto da anonimização na performance, eliminando confundidores.
 
 \subsection{Cálculo de Métricas de Utilidade com Intervalos de Confiança}
-Após o treinamento de cada modelo, o desempenho foi avaliado no **test set** correspondente calculando-se:
+Após o treinamento de cada modelo, o desempenho foi avaliado no \textbf{test set} correspondente calculando-se:
 \begin{itemize}
-    \item AUROC puntual (estimativa única);
-    \item AUPRC puntual (estimativa única);
+    \item AUROC pontual (estimativa única);
+    \item AUPRC pontual (estimativa única);
     \item Intervalo de Confiança de 95\% para ambas as métricas, obtido via \textbf{bootstrap não-paramétrico} com 1.000 reamostragens.
 \end{itemize}
 
-O procedimento de bootstrap: a partir das 2.688 predições do test set, realizar reamostragem com reposição 1.000 vezes, calcular AUROC e AUPRC em cada reamostra, e extrair os percentis 2.5\% e 97.5\% para o intervalo.
+O procedimento de bootstrap: a partir das 2.973 predições do test set, realiza-se a reamostragem com reposição 1.000 vezes. Para cada reamostra, calcula-se a AUROC e a AUPRC, extraindo-se os percentis 2.5\% e 97.5\% para compor o intervalo. Este método garante robustez estatística mesmo em classes desbalanceadas, permitindo verificar a significância das diferenças observadas entre os cenários.
 
 \subsection{Compilação de Resultados}
-De forma resumida (sem reportar valores numéricos que fazem parte de um capítulo de Resultados futuro), foram organizados em tabelas e gráficos:
+Os artefatos produzidos por cada etapa foram organizados em tabelas e gráficos para análise comparativa:
 \begin{itemize}
-    \item Tabela de Risco: Comparação de Prosecutor, Journalist, Marketer risks entre os três cenários;
-    \item Tabela de Performance: AUROC e AUPRC (com IC 95\%) para Baseline, Scenario A, B, C;
-    \item Gráfico de Trade-off: Visualização do relacionamento entre Risco (eixo x) e Utilidade (AUPRC no eixo y), marcando os quatro pontos (Baseline, A, B, C).
+    \item Tabela de Risco: comparação de Prosecutor, Journalist e Marketer risks entre os três cenários;
+    \item Tabela de Performance: AUROC e AUPRC (com IC 95\%) para Baseline, Cenário A, B e C — para ConCare e LSTM separadamente;
+    \item Gráfico de Trade-off: visualização do relacionamento entre Risco (eixo x) e Utilidade (AUPRC no eixo y) para os quatro pontos de cada modelo;
+    \item Tabelas de Subgrupos: AUROC e AUPRC por gênero (F/M) e por cenário, incluindo o cenário Blind.
 \end{itemize}
 
-Estes artefatos formam a base para a discussão dos trade-offs entre privacidade e utilidade que será apresentada em um capítulo de Resultados futuro.
+Os resultados e sua discussão são apresentados no \autoref{ch:resultados}.
+
+\section{Execução da Análise de Subgrupos por Gênero}
+\label{sec:dev-subgrupos}
+
+Após o treinamento e avaliação de todos os modelos e cenários, foi conduzida a análise de subgrupos descrita na \autoref{sec:metod-subgrupos}. As predições do conjunto de teste ($N = 2.973$ admissões) foram estratificadas em dois grupos: sexo feminino ($n_F = 1.324$) e sexo masculino ($n_M = 1.649$).
+
+Para cada subgrupo, cada modelo (ConCare e LSTM) e cada cenário (Baseline, A, B, C), foram calculados AUROC e AUPRC com intervalos de confiança de 95\% via bootstrap não-paramétrico (1.000 reamostragens), executado separadamente dentro de cada subgrupo com reamostragem com reposição sobre os registros daquele grupo.
+
