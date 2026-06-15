@@ -6,20 +6,7 @@
     \begin{otherlanguage*}{brazil}
     \begin{resumo}[Resumo]
 
-        Segundo a \textcite[3.1-3.2]{NBR6028:2003}, o resumo deve ressaltar o
-        objetivo, o método, os resultados e as conclusões do documento. A ordem e a extensão
-        destes itens dependem do tipo de resumo (informativo ou indicativo) e do
-        tratamento que cada item recebe no documento original. O resumo deve ser
-        precedido da referência do documento, com exceção do resumo inserido no
-        próprio documento. (\ldots) As palavras-chave devem figurar logo abaixo do
-        resumo, antecedidas da expressão Palavras-chave:, separadas entre si por
-        ponto e finalizadas também por ponto.
-
-        Além disso, na UFSC o texto do resumo deve ser digitado, em um único bloco, sem espaço de parágrafo. O resumo deve
-        ser significativo, composto de uma sequência de frases concisas, afirmativas e não de uma
-        enumeração de tópicos. Não deve conter citações. Deve usar o verbo na voz passiva. Abaixo do
-        resumo, deve-se informar as palavras-chave (palavras ou expressões significativas retiradas do
-        texto) ou, termos retirados de thesaurus da área. \englishword{\showfont}
+        O uso secundário de dados clínicos para o treinamento de modelos de aprendizado de máquina esbarra na tensão entre a proteção de dados pessoais sensíveis, exigida pela Lei Geral de Proteção de Dados Pessoais (LGPD), e a preservação da utilidade desses dados. Este trabalho teve como objetivo avaliar o equilíbrio entre a proteção da privacidade e a preservação da utilidade clínica em modelos de aprendizado profundo aplicados a dados de saúde. Para tanto, foi conduzida uma avaliação orientada à tarefa sobre uma amostra de 17.917 admissões em unidades de terapia intensiva do banco de dados MIMIC-III. Três cenários progressivos de pseudonimização foram aplicados com a ferramenta ARX (k-anonimato; k-anonimato com l-diversidade; e Privacidade Diferencial), e o risco residual de reidentificação foi auditado sob três modelos de ameaça. A utilidade foi medida pelo desempenho de dois modelos de aprendizado profundo (ConCare e LSTM com fusão tardia) na predição de mortalidade hospitalar, avaliada por AUROC e AUPRC com intervalos de confiança de 95\%. Os resultados mostraram que todos os cenários reduziram o risco máximo de reidentificação de 100\% para menos de 4\%; a combinação de k-anonimato e l-diversidade reduziu o risco a 1,37\% com degradação de AUROC inferior a 0,5 ponto percentual e preservação integral da amostra. Conclui-se que a pseudonimização robusta viabiliza o uso de dados clínicos em pesquisa sob conformidade com a LGPD sem sacrificar a utilidade clínica, demonstrando que a oposição entre privacidade e utilidade constitui um falso dilema.
 
         \imprimirpalavraschave{Palavras-chaves}{\begin{inparaitem}[]\palavraschaveportugues\end{inparaitem}}
 
@@ -36,7 +23,7 @@
     \begin{otherlanguage*}{english}
     \begin{resumo}[Abstract]
 
-        This is the English abstract.
+        The secondary use of clinical data to train machine learning models faces the tension between protecting sensitive personal data, as required by the Brazilian General Data Protection Law (LGPD), and preserving the utility of such data. This work aimed to evaluate the balance between privacy protection and the preservation of clinical utility in deep learning models applied to health data. A task-based evaluation was conducted on a sample of 17,917 intensive care unit admissions from the MIMIC-III database. Three progressive pseudonymization scenarios were applied with the ARX tool (k-anonymity; k-anonymity with l-diversity; and Differential Privacy), and the residual re-identification risk was audited under three threat models. Utility was measured by the performance of two deep learning models (ConCare and LSTM with late fusion) in predicting in-hospital mortality, assessed by AUROC and AUPRC with 95\% confidence intervals. All scenarios reduced the maximum re-identification risk from 100\% to below 4\%; combining k-anonymity and l-diversity lowered the risk to 1.37\% with an AUROC degradation below 0.5 percentage points while fully preserving the sample. It is concluded that robust pseudonymization enables the use of clinical data in research under LGPD compliance without sacrificing clinical utility, showing that the opposition between privacy and utility is a false dilemma.
 
         \imprimirpalavraschave{Keywords}{\begin{inparaitem}[]\palavraschaveingles\end{inparaitem}}
 

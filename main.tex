@@ -53,6 +53,11 @@ section=TITLE, % Título de seções em caixa alta
 
 \usepackage{float}
 
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, backgrounds, calc}
+
+\usepackage{pdfpages}
+
 % Utilize o arquivo aftertext/references.bib para incluir sua bibliografia.
 % http://tug.ctan.org/tex-archive/macros/latex/contrib/cleveref/cleveref.pdf
 \addbibresource{aftertext/references.bib}
@@ -62,25 +67,25 @@ section=TITLE, % Título de seções em caixa alta
 
 % FIXME: Preencha com seus dados
 \autor{\brazilword{Vitor Matheus Valandro da Rosa}}
-\titulo{\lang{Work Title\protect\\Could be break into two lines}{Anonimização de Dados Clínicos para Pesquisa em Saúde}}
+\titulo{\lang{Work Title\protect\\Could be break into two lines}{Anonimização de Dados Clínicos para Aprendizado de Máquina}}
 
 % FIXME: Se houver subtítulo, descomente a linha abaixo
-\subtitulo{\lang{Subtitle}{Uma Abordagem em Conformidade com a LGPD}}
+\subtitulo{\lang{Subtitle}{O Equilíbrio entre Privacidade e Utilidade sob a LGPD}}
 
 % FIXME: Siglas para grau de formação Dr./Dra., Me./Ma, Bel. Bela. (inglês: PhD., MSc., Bs.)
-\orientador[\lang{Supervisor}{Orientadora}]{\brazilword{Giovana Nunes Inocêncio}, \lang{Me.}{Me.}}
+\orientador[\lang{Supervisor}{Orientadora}]{\brazilword{Giovana Nunes Inocêncio}, \lang{Ma.}{Ma.}}
 
 % FIXME: Se houver coorientador, descomente a linha abaixo
 \coorientador[\lang{Co-supervisor}{Coorientador}]{\brazilword{ Jean Everson Martina}, \lang{Dr.}{Dr.}}
 
 % FIXME: Preencher com o nome do Coordenador de TCCs/Teses do seu curso
-\coordenador[\lang{Coordinator}{Coordenador(a)}]{\brazilword{Nome do Coordenador(a)}, \lang{Phd.}{Dr.}}
+\coordenador[\lang{Coordinator}{Coordenador}]{\brazilword{José Eduardo de Lucca}, \lang{MSc.}{Me.}}
 
 % FIXME: Local da sua defesa
 \local{\brazilword{Florianópolis, Santa Catarina} -- \lang{Brazil}{Brasil}}
 
 % FIXME: Ano da sua defesa
-\ano{2025}
+\ano{2026}
 \biblioteca{\lang{University Library}{Biblioteca Universitária}}
 
 % FIXME: Sigla da sua instituição
@@ -113,7 +118,7 @@ section=TITLE, % Título de seções em caixa alta
 \campus{\brazilword{Campus Reitor João David Ferreira Lima}}
 
 % FIXME: Data da sua defesa
-\data{\lang{8 de dezembro}{8 de dezembro} 2025}
+\data{\lang{15 de junho}{15 de junho} 2026}
 
 % O preambulo deve conter tipo do trabalho, objetivo, nome da instituição e a área de concentração.
 \preambulo{\lang%
@@ -132,14 +137,20 @@ section=TITLE, % Título de seções em caixa alta
 % https://tex.stackexchange.com/questions/340661/argument-of-languageactivearg-has-an-extra-i-use-includegraphics-and-r
 \useshorthands{~}\defineshorthand{~=}{\hyp{}}
 
-\palavraschaveufsc{palavraschaveingles}   {Keyword 1}
-\palavraschaveufsc{palavraschaveportugues}{Palavra~=Chave 1}
+\palavraschaveufsc{palavraschaveingles}   {Data anonymization}
+\palavraschaveufsc{palavraschaveportugues}{Anonimização de dados}
 
-\palavraschaveufsc{palavraschaveingles}   {Keyword 2}
-\palavraschaveufsc{palavraschaveportugues}{Palavra~=Chave 2}
+\palavraschaveufsc{palavraschaveingles}   {Differential privacy}
+\palavraschaveufsc{palavraschaveportugues}{Privacidade diferencial}
 
-\palavraschaveufsc{palavraschaveingles}   {Keyword 3}
-\palavraschaveufsc{palavraschaveportugues}{Palavra~=Chave 3}
+\palavraschaveufsc{palavraschaveingles}   {LGPD}
+\palavraschaveufsc{palavraschaveportugues}{LGPD}
+
+\palavraschaveufsc{palavraschaveingles}   {Deep learning}
+\palavraschaveufsc{palavraschaveportugues}{Aprendizado profundo}
+
+\palavraschaveufsc{palavraschaveingles}   {Clinical data}
+\palavraschaveufsc{palavraschaveportugues}{Dados clínicos}
 
 
 \hypersetup
@@ -272,6 +283,16 @@ section=TITLE, % Título de seções em caixa alta
         % \nocite{*}
         \printbibliography[title=\lang{REFERENCES}{REFERÊNCIAS}]
     \endgroup
+
+    % Apêndices
+    \begin{apendicesenv}
+        \ifforcedinclude\else\partapendices\fi
+        \setlength\beforechapskip{50pt}
+        \setlength\midchapskip{20pt}
+        \setlength\afterchapskip{20pt}
+
+        \include{aftertext/apendice}
+    \end{apendicesenv}
 
     % INDICE REMISSIVO
     \ifforcedinclude\else
