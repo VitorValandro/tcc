@@ -73,7 +73,7 @@
     % \PRIVATEbookmarkthis{Ficha Catalográfica}
     % \addtotextpreliminarycontent{Ficha Catalográfica}
 
-    % \include{beforetext/fichacatalografica}
+    \include{beforetext/fichacatalografica}
     % https://tex.stackexchange.com/questions/91440/how-to-include-multiple-pages-in-latex
     % \includepdf{pictures/Ficha_Catalografica.pdf}
     \ifforcedinclude\else\cleardoublepage\fi
@@ -87,29 +87,29 @@
 % Após isso, substitua todo o conteúdo deste arquivo por uma imagem da página assinada pela
 % banca com o comando abaixo:
 \ifforcedinclude\else\cleardoublepage\fi
-% \include{beforetext/folhadeaprovacao}
+\include{beforetext/folhadeaprovacao}
 % \includepdf{pictures/folhadeaprovacao_final.pdf}
 
 
 % Dedicatória
-% \ifforcedinclude\else\cleardoublepage\fi
-% \ifforcedinclude\else\input{beforetext/dedicatoria.tex}\fi
+\ifforcedinclude\else\cleardoublepage\fi
+\ifforcedinclude\else\input{beforetext/dedicatoria.tex}\fi
 
 % Agradecimentos
-% \ifforcedinclude\else\cleardoublepage\fi
-% \include{beforetext/agradecimentos}
+\ifforcedinclude\else\cleardoublepage\fi
+\include{beforetext/agradecimentos}
 
 % % Epígrafe
-% \ifforcedinclude\else\cleardoublepage\fi
-% \include{beforetext/epigrafe}
+\ifforcedinclude\else\cleardoublepage\fi
+\include{beforetext/epigrafe}
 
 
 % Ajusta o espaçamento dos parágrafos do resumo
 \setlength{\absparsep}{18pt}
 
-% % RESUMOS
-% \ifforcedinclude\else\cleardoublepage\fi
-% \include{beforetext/resumos}
+% RESUMOS
+\ifforcedinclude\else\cleardoublepage\fi
+\include{beforetext/resumos}
 
 % Some tables of contents
 \ifforcedinclude\else
@@ -161,9 +161,9 @@
 \fi
 
 
-% % inserir lista de abreviaturas e siglas
-% \ifforcedinclude\else\cleardoublepage\fi
-% \include{beforetext/siglas}
+% inserir lista de abreviaturas e siglas
+\ifforcedinclude\else\cleardoublepage\fi
+\include{beforetext/siglas}
 
 % % Inserir lista de símbolos
 % \ifforcedinclude\else\cleardoublepage\fi

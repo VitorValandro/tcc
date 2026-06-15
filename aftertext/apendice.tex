@@ -1,0 +1,34 @@
+\chapter{Artigo}
+\label{ch:apendice-artigo}
+
+Este apêndice reproduz, na íntegra, o artigo científico derivado deste trabalho de conclusão de curso, intitulado \textit{Privacy without Loss of Utility: Evaluation of De-identification Techniques in Deep Learning for Intensive Care Units}, elaborado pelo autor em conjunto com a orientadora e o coorientador. O artigo foi submetido e apresentado no Simpósio Brasileiro de Computação Aplicada à Saúde (SBCAS) de 2026, sendo publicado nos anais do evento\footnote{Disponível em: \url{https://sol.sbc.org.br/index.php/sbcas/article/view/42843/42610}.}.
+
+\includepdf[pages=-]{../artigo-sbc/sbc-template.pdf}
+
+\chapter{Repositório de Código}
+\label{ch:apendice-repositorio}
+
+O código-fonte completo utilizado neste trabalho (incluindo os scripts de pré-processamento, criação da coorte para anonimização, treinamento dos modelos ConCare e LSTM Late Fusion, e análise de subgrupos) está disponível publicamente no repositório:
+
+\begin{center}
+    \url{https://codigos.ufsc.br/vitor.valandro/tcc}
+\end{center}
+
+O repositório está organizado em três etapas numeradas, correspondentes ao pipeline metodológico descrito no \autoref{ch:metodologia} e detalhado no \autoref{ch:desenvolvimento}:
+
+\begin{itemize}
+    \item \textbf{\texttt{1\_data\_pipeline/}}: Instruções para reprodução do pré-processamento do MIMIC-III utilizando o benchmark de \citeonline{Harutyunyan2019}, incluindo extração de episódios, divisão treino/teste e geração da tarefa de mortalidade hospitalar.
+
+    \item \textbf{\texttt{2\_anonymization/}}: Instruções para configuração dos três cenários de anonimização na ferramenta ARX, com especificação dos quasi-identificadores, hierarquias de generalização e critérios de privacidade utilizados em cada cenário.
+
+    \item \textbf{\texttt{3\_experiments/}}: Scripts Python para execução dos experimentos, numerados na ordem de execução:
+    \begin{enumerate}
+        \item \texttt{01\_merge\_phenotypes.py}: Construção dos vetores de fenótipos CCS;
+        \item \texttt{02\_create\_arx\_cohort.py}: Geração da coorte alinhada N=17.917;
+        \item \texttt{03\_run\_concare.py}: Treinamento e avaliação do modelo ConCare;
+        \item \texttt{04\_run\_lstm.py}: Treinamento e avaliação do modelo LSTM Late Fusion;
+        \item \texttt{05\_run\_subgroup\_analysis.py}: Análise de subgrupos por gênero.
+    \end{enumerate}
+\end{itemize}
+
+Instruções detalhadas de instalação, configuração de ambiente e organização esperada dos arquivos de dados encontram-se nos arquivos \texttt{README.md} e \texttt{README.pt.md} de cada diretório.
